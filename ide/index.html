@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryoOmega ULTRA IDE — Spectrum Prime</title>
+<style>
+:root{
+  --nx-void:#05070d; --nx-depth:#0a0e1a; --nx-surface:rgba(16,22,38,.72);
+  --nx-glass:rgba(22,30,52,.55); --nx-line:rgba(120,160,255,.14);
+  --nx-spektrum-1:#7b5cff; --nx-spektrum-2:#00e5ff; --nx-spektrum-3:#ff5c8a;
+  --nx-gold:#f5c56b; --nx-ink:#e8edff; --nx-dim:#8fa0c9;
+  --nx-radius:14px; --nx-blur:blur(18px) saturate(1.4);
+  --nx-font:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 700px at 70% -10%,rgba(123,92,255,.18),transparent),
+     radial-gradient(900px 600px at 10% 110%,rgba(0,229,255,.12),transparent),var(--nx-void);
+  color:var(--nx-ink);font-family:var(--nx-font);font-size:13px;overflow:hidden}
+.glass{background:var(--nx-surface);backdrop-filter:var(--nx-blur);-webkit-backdrop-filter:var(--nx-blur);
+  border:1px solid var(--nx-line);border-radius:var(--nx-radius)}
+#app{display:grid;grid-template-rows:46px 1fr;height:100vh;gap:8px;padding:8px}
+header{display:flex;align-items:center;gap:12px;padding:0 14px}
+.logo{font-weight:700;letter-spacing:.12em;
+  background:linear-gradient(90deg,var(--nx-spektrum-2),var(--nx-spektrum-1),var(--nx-spektrum-3));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{color:var(--nx-gold);letter-spacing:.2em}
+.spacer{flex:1}
+.btn{background:var(--nx-glass);border:1px solid var(--nx-line);color:var(--nx-ink);
+  padding:6px 12px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px}
+.btn:hover{border-color:var(--nx-spektrum-2);box-shadow:0 0 14px rgba(0,229,255,.25)}
+main{display:grid;grid-template-columns:250px 1fr 360px;gap:8px;min-height:0}
+.panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel h2{font-size:10px;letter-spacing:.2em;color:var(--nx-dim);padding:10px 12px 6px;text-transform:uppercase}
+#tree{overflow:auto;padding:4px 6px 12px;flex:1}
+.node{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;cursor:pointer;
+  white-space:nowrap;color:var(--nx-dim)}
+.node:hover{background:rgba(123,92,255,.12);color:var(--nx-ink)}
+.node.active{background:rgba(0,229,255,.14);color:var(--nx-spektrum-2)}
+.node .d{color:var(--nx-spektrum-1)}
+#editor-wrap{display:flex;flex-direction:column;flex:1;min-height:0}
+#tabs{display:flex;gap:4px;padding:8px 10px 0;overflow-x:auto}
+.tab{padding:6px 12px;border-radius:9px 9px 0 0;background:var(--nx-glass);border:1px solid var(--nx-line);
+  border-bottom:none;cursor:pointer;font-size:12px;color:var(--nx-dim);white-space:nowrap}
+.tab.active{color:var(--nx-spektrum-2);border-color:var(--nx-spektrum-2)}
+#editor{flex:1;background:rgba(5,8,16,.6);color:var(--nx-ink);border:none;border-top:1px solid var(--nx-line);
+  padding:14px;font-family:var(--nx-font);font-size:13px;line-height:1.55;resize:none;outline:none;
+  tab-size:2;white-space:pre;overflow:auto}
+#chat{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px 10px;border-radius:10px;max-width:95%;line-height:1.5}
+.msg.you{align-self:flex-end;background:rgba(123,92,255,.22);border:1px solid rgba(123,92,255,.4)}
+.msg.ai{align-self:flex-start;background:var(--nx-glass);border:1px solid var(--nx-line)}
+.msg.sys{align-self:center;color:var(--nx-gold);font-size:11px}
+#chatbar{display:flex;gap:6px;padding:8px}
+#chatbar input{flex:1;background:rgba(5,8,16,.7);border:1px solid var(--nx-line);color:var(--nx-ink);
+  padding:9px 12px;border-radius:10px;font-family:inherit;outline:none}
+#chatbar input:focus{border-color:var(--nx-spektrum-2)}
+#term{height:130px;overflow:auto;padding:8px 12px;font-size:12px;color:var(--nx-spektrum-2);
+  background:rgba(5,8,16,.7)}
+#term .p{color:var(--nx-gold)}
+#palette{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;
+  background:rgba(5,7,13,.6);backdrop-filter:blur(4px);z-index:50;padding-top:12vh}
+#palette.open{display:flex}
+#palette-box{width:min(560px,92vw);padding:10px}
+#palette input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--nx-line);
+  color:var(--nx-ink);padding:10px 4px;font-family:inherit;font-size:14px;outline:none}
+#palette .item{padding:9px 10px;border-radius:9px;cursor:pointer;color:var(--nx-dim)}
+#palette .item:hover{background:rgba(123,92,255,.15);color:var(--nx-ink)}
+#skills-drawer{position:fixed;top:0;right:-420px;width:min(400px,88vw);height:100vh;z-index:40;
+  transition:right .25s ease;display:flex;flex-direction:column;padding:12px}
+#skills-drawer.open{right:0}
+.sk{padding:8px 10px;border-radius:10px;border:1px solid var(--nx-line);margin-bottom:6px;cursor:pointer}
+.sk b{color:var(--nx-spektrum-2);display:block;font-size:12px}
+.sk span{color:var(--nx-dim);font-size:11px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--nx-spektrum-2);
+  box-shadow:0 0 10px var(--nx-spektrum-2);animation:p 2s infinite}
+@keyframes p{50%{opacity:.4}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(123,92,255,.3);border-radius:4px}
+@media(max-width:900px){main{grid-template-columns:1fr}#tree-panel,#agent-panel{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="glass">
+    <span class="pulse"></span>
+    <span class="logo">CRYOMEGA&nbsp;ULTRA <small>SPECTRUM PRIME v0.1.0</small></span>
+    <div class="spacer"></div>
+    <button class="btn" onclick="openPalette()">⌘K palette</button>
+    <button class="btn" onclick="toggleSkills()">◈ skills</button>
+    <button class="btn" onclick="omega('doctor')">doctor</button>
+  </header>
+  <main>
+    <section class="glass panel" id="tree-panel">
+      <h2>Spectrum Explorer</h2>
+      <div id="tree"></div>
+    </section>
+    <section class="glass panel">
+      <div id="editor-wrap">
+        <div id="tabs"></div>
+        <textarea id="editor" spellcheck="false" placeholder="⟦ open a file from the Spectrum Explorer ⟧"></textarea>
+        <div id="term" class="glass"><span class="p">ω›</span> CRYOMEGA ULTRA terminal block — ready</div>
+      </div>
+    </section>
+    <section class="glass panel" id="agent-panel">
+      <h2>Agent Console · minimax-m3</h2>
+      <div id="chat"></div>
+      <div id="chatbar">
+        <input id="chatin" placeholder="chat · /agent · /plan · /skills …" autofocus>
+        <button class="btn" onclick="send()">▲</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="palette">
+  <div id="palette-box" class="glass">
+    <input id="palette-in" placeholder="Type a command… (open, chat, skills, agent, plan, doctor)">
+    <div id="palette-list"></div>
+  </div>
+</div>
+
+<aside id="skills-drawer" class="glass">
+  <h2 style="padding:10px 12px 6px;color:var(--nx-dim);font-size:10px;letter-spacing:.2em">CRYO SKILLS REGISTRY</h2>
+  <div id="skills-list" style="overflow:auto;flex:1;padding:0 6px 12px"></div>
+</aside>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = async p => (await fetch(p)).json();
+let tabs = [], active = null;
+
+async function status(){
+  const s = await api('/api/status');
+  sys(`ULTRA ${s.version} · root ${s.root.split('/').pop()} · ${s.skills} skills · providers ` +
+      Object.entries(s.providers).map(([p,k])=>p[0]+(k?'✓':'·')).join(' '));
+}
+function sys(t){ const d=document.createElement('div'); d.className='msg sys'; d.textContent=t;
+  $('#chat').appendChild(d); $('#chat').scrollTop=1e9; }
+
+async function loadTree(path='.', depth=0){
+  const data = await api('/api/tree?path='+encodeURIComponent(path));
+  const tree = $('#tree'); if(depth===0) tree.innerHTML='';
+  for(const e of data.entries){
+    const n=document.createElement('div'); n.className='node';
+    n.style.paddingLeft=(8+depth*14)+'px';
+    n.innerHTML = e.type==='dir' ? `<span class="d">▸</span>${e.name}` : `<span class="d">·</span>${e.name}`;
+    n.onclick=()=> e.type==='dir' ? loadTree(path+'/'+e.name, depth+1) : openFile(path+'/'+e.name);
+    tree.appendChild(n);
+  }
+}
+async function openFile(p){
+  const f = await api('/api/file?path='+encodeURIComponent(p));
+  if(f.error){ sys('⟦forbidden⟧ '+p); return; }
+  if(!tabs.includes(p)){ tabs.push(p);
+    const t=document.createElement('div'); t.className='tab'; t.textContent=p.split('/').pop();
+    t.onclick=()=>activate(p); $('#tabs').appendChild(t); }
+  active=p; activate(p);
+}
+function activate(p){ active=p; $('#editor').value='';
+  api('/api/file?path='+encodeURIComponent(p)).then(f=>{ if(active===p) $('#editor').value=f.content||''; });
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===p));
+}
+
+function send(){
+  const inp=$('#chatin'); const text=inp.value.trim(); if(!text) return;
+  inp.value='';
+  const y=document.createElement('div'); y.className='msg you'; y.textContent=text;
+  $('#chat').appendChild(y); $('#chat').scrollTop=1e9;
+  if(text.startsWith('/')){
+    const cmd=text.slice(1).split(' ')[0], arg=text.slice(1+cmd.length).trim();
+    if(cmd==='skills'){ loadSkills(arg); sys('skills drawer '+(arg?`filtered “${arg}”`:'refreshed')); toggleSkills(true); }
+    else if(cmd==='agent'){ ai(`Dispatch to Cryo orchestrator: ${arg||'(no task)'}\nSpectrum S1→S8 · SafeMode L2 · A22 QA. Engine: omega agent "${arg}" in CLI.`); }
+    else if(cmd==='plan'){ ai(`Plan brief for “${arg}”: scope → risks → staged steps → budget.\nRun \`omega plan "${arg}"\` for the full LLM draft.`); }
+    else if(cmd==='help'){ sys('commands: /skills · /agent · /plan · /help'); }
+    else sys('unknown /'+cmd);
+    return;
+  }
+  ai('⟦offline echo⟧ set CRYOMEGA_MINIMAX_KEY for live minimax-m3.\n→ '+text);
+}
+function ai(t){ const d=document.createElement('div'); d.className='msg ai'; d.textContent=t;
+  $('#chat').appendChild(d); $('#chat').scrollTop=1e9; }
+
+async function loadSkills(term=''){
+  const all = term ? await api('/api/status') : null;
+  const res = await fetch('/api/skills?q='+encodeURIComponent(term));
+  const list = await res.json();
+  $('#skills-list').innerHTML='';
+  for(const s of list){
+    const d=document.createElement('div'); d.className='sk';
+    d.innerHTML=`<b>${s.name}</b><span>${s.description}</span>`;
+    d.onclick=()=>{ ai(`skill ⟦${s.name}⟧\n${s.description}`); $('#skills-drawer').classList.remove('open'); };
+    $('#skills-list').appendChild(d);
+  }
+}
+function toggleSkills(force){ const d=$('#skills-drawer');
+  const open = force===true || !d.classList.contains('open');
+  d.classList.toggle('open', open); if(open) loadSkills(); }
+
+const COMMANDS=[
+  ['open file tree','loadTree()'],['reload tree','loadTree()'],
+  ['skills drawer','toggleSkills()'],['agent console','$("#chatin").focus()'],
+  ['doctor','omega("doctor")'],['status','status()']];
+function openPalette(){ $('#palette').classList.add('open'); $('#palette-in').value=''; renderPal('');
+  $('#palette-in').focus(); }
+function renderPal(q){ $('#palette-list').innerHTML='';
+  COMMANDS.filter(c=>c[0].toLowerCase().includes(q)).forEach(c=>{
+    const d=document.createElement('div'); d.className='item'; d.textContent=c[0];
+    d.onclick=()=>{ eval(c[1]); closePalette(); }; $('#palette-list').appendChild(d); }); }
+function closePalette(){ $('#palette').classList.remove('open'); }
+function omega(cmd){ sys(`ω ${cmd} → run in CLI: omega ${cmd}`); }
+
+$('#palette-in').addEventListener('input',e=>renderPal(e.target.value.toLowerCase()));
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){ e.preventDefault(); openPalette(); }
+  if(e.key==='Escape'){ closePalette(); $('#skills-drawer').classList.remove('open'); }
+});
+$('#chatin').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
+$('#palette').addEventListener('click',e=>{ if(e.target.id==='palette') closePalette(); });
+
+status(); loadTree(); loadSkills();
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+#!/data/data/com.termux/files/usr/bin/python3
+"""omega — CryoOmega ULTRA unified CLI (v0.1.0 Spectrum Prime)."""
+import argparse
+import http.server
+import json
+import os
+import socketserver
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+
+from ultra import __version__, agents, config, doctor, llm, skills, tui  # noqa: E402
+
+IDE_DIR = Path(__file__).resolve().parents[1] / "ide"
+
+
+def cmd_chat(args):
+    tui.run()
+
+
+def cmd_agent(args):
+    result = agents.dispatch(args.task, agent=args.agent)
+    print(f"engine: {result['engine']}")
+    print(result["output"])
+
+
+def cmd_skills(args):
+    if args.action == "list":
+        for s in skills.local_skills():
+            print(f"  {s['name']:<42} {s['description']}")
+        print(f"\n({len(skills.local_skills())} skills installed)")
+    elif args.action == "search":
+        hits = skills.search(args.term)
+        for s in hits:
+            print(f"  {s['name']:<42} {s['description']}")
+        print(f"\n({len(hits)} matches)")
+    elif args.action == "add":
+        installed = skills.add(args.repo)
+        print(f"installed {len(installed)} skill(s):")
+        for n in installed:
+            print(f"  + {n}")
+    elif args.action == "info":
+        meta, body = skills.info(args.name)
+        print(json.dumps(meta, indent=2))
+        print("\n" + body)
+
+
+def cmd_plan(args):
+    res = llm.complete(
+        f"You are cryo-omega-plan-mode. Draft a concise, staged execution plan "
+        f"(steps, risks, budget) for: {args.task}")
+    print(res)
+
+
+def cmd_doctor(args):
+    ok_all = True
+    for name, ok, note in doctor.run():
+        mark = "✔" if ok else "✘"
+        print(f"  {mark} {name:<14} {note}")
+        ok_all = ok_all and ok
+    print("\n Doctor:", "ALL GREEN" if ok_all else "issues found (see ✘)")
+
+
+def cmd_init(args):
+    target = Path(args.dir or ".").resolve()
+    yml = target / ".omega.yaml"
+    yml.write_text(
+        f"# CryoOmega ULTRA project config\n"
+        f"provider: {config.DEFAULTS['provider']}\n"
+        f"model: {config.DEFAULTS['model']}\n"
+        f"port: {config.DEFAULTS['port']}\n"
+        f"safemode_level: {config.DEFAULTS['safemode_level']}\n")
+    print(f"wrote {yml}")
+
+
+def _safe_root(rel):
+    p = (config.ROOT / rel).resolve()
+    try:
+        p.relative_to(config.ROOT)
+    except ValueError:
+        return None
+    return p
+
+
+class _Handler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, directory=str(IDE_DIR), **kw)
+
+    def list_directory(self, path):
+        return super().list_directory(Path(path) / "index.html" if False else path)
+
+    def _json(self, body):
+        data = json.dumps(body).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_GET(self):
+        if self.path.startswith("/api/tree"):
+            from urllib.parse import urlparse, parse_qs, unquote
+            q = parse_qs(urlparse(self.path).query)
+            rel = unquote(q.get("path", ["."])[0])
+            base = _safe_root(rel)
+            if base is None or not base.is_dir():
+                self._json({"error": "forbidden"})
+                return
+            entries = []
+            try:
+                for e in sorted(base.iterdir(), key=lambda x: (x.is_file(), x.name))[:400]:
+                    if e.name in (".git", "node_modules", "__pycache__"):
+                        continue
+                    entries.append({"name": e.name, "type": "dir" if e.is_dir() else "file",
+                                    "size": e.stat().st_size if e.is_file() else 0})
+            except OSError:
+                pass
+            self._json({"path": rel, "entries": entries})
+            return
+        if self.path.startswith("/api/file"):
+            from urllib.parse import urlparse, parse_qs, unquote
+            q = parse_qs(urlparse(self.path).query)
+            base = _safe_root(unquote(q.get("path", [""])[0]))
+            if base is None or not base.is_file() or base.stat().st_size > 400_000:
+                self._json({"error": "forbidden"})
+                return
+            try:
+                text = base.read_text(errors="replace")[:200_000]
+            except (OSError, UnicodeError):
+                text = "⟦binary file⟧"
+            self._json({"path": str(base.relative_to(config.ROOT)), "content": text})
+            return
+        if self.path.startswith("/api/skills"):
+            from urllib.parse import urlparse, parse_qs, unquote
+            q = parse_qs(urlparse(self.path).query)
+            term = unquote(q.get("q", [""])[0])
+            self._json(skills.search(term) if term else skills.local_skills())
+            return
+        if self.path == "/api/status":
+            body = json.dumps({
+                "version": __version__,
+                "root": str(config.ROOT),
+                "skills": len(skills.local_skills()),
+                "providers": {p: bool(config.key_for(p)) for p in config.PROVIDERS},
+            }).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        super().do_GET()
+
+
+def cmd_serve(args):
+    port = args.port or config.load().get("port", 8787)
+    with socketserver.ThreadingTCPServer(("127.0.0.1", port), _Handler) as httpd:
+        print(f"⟦CRYOMEGA ULTRA IDE⟧ http://127.0.0.1:{port}  (Ctrl-C to stop)")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nstopped")
+
+
+def cmd_ide(args):
+    port = args.port or config.load().get("port", 8787)
+    url = f"http://127.0.0.1:{port}"
+    try:
+        subprocess.Popen(
+            [sys.executable, str(Path(__file__).resolve()), "serve", "--port", str(port)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True)
+    except OSError:
+        pass
+    for opener in ("termux-open-url", "xdg-open"):
+        if subprocess.run([opener, url], capture_output=True).returncode == 0:
+            break
+    print(f"IDE serving at {url} (server kept alive in background)")
+
+
+def main():
+    p = argparse.ArgumentParser(prog="omega", description="CryoOmega ULTRA CLI")
+    p.add_argument("--version", action="version", version=f"omega {__version__}")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("chat", help="interactive TUI chat").set_defaults(func=cmd_chat)
+    sp = sub.add_parser("agent", help="dispatch task to Cryo orchestrator")
+    sp.add_argument("task"); sp.add_argument("--agent", default=None)
+    sp.set_defaults(func=cmd_agent)
+
+    sk = sub.add_parser("skills", help="skills engine")
+    sk.add_argument("action", choices=["list", "search", "add", "info"])
+    sk.add_argument("target", nargs="?", default="")
+    sk.set_defaults(func=lambda a: cmd_skills(
+        type("A", (), {"action": a.action,
+                       "term": a.target if a.action == "search" else "",
+                       "repo": a.target if a.action == "add" else "",
+                       "name": a.target if a.action == "info" else ""})()))
+
+    sp = sub.add_parser("plan", help="draft plan brief")
+    sp.add_argument("task")
+    sp.set_defaults(func=cmd_plan)
+    sub.add_parser("doctor", help="health check").set_defaults(func=cmd_doctor)
+    ip = sub.add_parser("init", help="write .omega.yaml")
+    ip.add_argument("--dir", default=None); ip.set_defaults(func=cmd_init)
+    sv = sub.add_parser("serve", help="serve IDE")
+    sv.add_argument("--port", type=int, default=None); sv.set_defaults(func=cmd_serve)
+    iv = sub.add_parser("ide", help="launch immersive IDE")
+    iv.add_argument("--port", type=int, default=None); iv.set_defaults(func=cmd_ide)
+
+    args = p.parse_args()
+    if args.cmd == "plan" and not getattr(args, "task", None):
+        p.error("plan requires a task")
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
