@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="CryoOmega ULTRA SPECTRUM PRIME v0.1.0">
+  <title>CRYOMEGA ULTRA — SPECTRUM PRIME v0.1.0</title>
+  <defs>
+    <linearGradient id="sp" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#7b5cff"/>
+      <stop offset="100%" stop-color="#ff5c8a"/>
+    </linearGradient>
+    <radialGradient id="void" cx="70%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#7b5cff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#05070d" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#05070d"/>
+  <rect width="1200" height="630" fill="url(#void)"/>
+  <rect x="0" y="0" width="1200" height="4" fill="url(#sp)"/>
+  <g transform="translate(344, -20)">
+    <circle cx="256" cy="256" r="200" fill="none" stroke="#0a0e1a" stroke-width="2" stroke-dasharray="4 8"/>
+    <path filter="url(#glow)" fill="url(#sp)" stroke="#f5c56b" stroke-width="1.5" d="
+    M 140 340
+    L 170 340
+    L 185 300
+    L 200 250
+    L 220 200
+    L 256 160
+    L 292 200
+    L 312 250
+    L 327 300
+    L 342 340
+    L 372 340
+    L 372 310
+    L 350 310
+    L 335 270
+    L 320 220
+    L 300 185
+    L 256 150
+    L 212 185
+    L 192 220
+    L 177 270
+    L 162 310
+    L 140 310
+    Z
+    M 210 280
+    L 230 230
+    L 256 200
+    L 282 230
+    L 302 280
+    L 290 300
+    L 270 260
+    L 256 240
+    L 242 260
+    L 222 300
+    Z
+"/>
+    <g filter="url(#glow)">
+      <circle cx="256" cy="56" r="6" fill="#00e5ff"/><circle cx="398" cy="110" r="6" fill="#7b5cff"/><circle cx="456" cy="256" r="6" fill="#ff5c8a"/><circle cx="398" cy="402" r="6" fill="#ff5c8a"/><circle cx="256" cy="456" r="6" fill="#7b5cff"/><circle cx="114" cy="402" r="6" fill="#00e5ff"/><circle cx="56" cy="256" r="6" fill="#00e5ff"/><circle cx="114" cy="110" r="6" fill="#00e5ff"/>
+    </g>
+  </g>
+  <text x="600" y="500" text-anchor="middle" fill="#e8edff" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="42" font-weight="700" letter-spacing="10">CRYOMEGA ULTRA</text>
+  <text x="600" y="542" text-anchor="middle" fill="#f5c56b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" letter-spacing="8">SPECTRUM PRIME v0.1.0</text>
+  <text x="600" y="578" text-anchor="middle" fill="#8fa0c9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" letter-spacing="6">CLI · TUI · Web IDE</text>
+</svg>
