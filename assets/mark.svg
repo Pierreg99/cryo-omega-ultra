@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="CryoOmega ULTRA mark">
+  <title>CryoOmega ULTRA</title>
+  <defs>
+    <linearGradient id="sp" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#7b5cff"/>
+      <stop offset="100%" stop-color="#ff5c8a"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="#05070d"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#0a0e1a" stroke-width="2" stroke-dasharray="4 8"/>
+  <path filter="url(#glow)" fill="url(#sp)" stroke="#f5c56b" stroke-width="1.5" d="
+    M 140 340
+    L 170 340
+    L 185 300
+    L 200 250
+    L 220 200
+    L 256 160
+    L 292 200
+    L 312 250
+    L 327 300
+    L 342 340
+    L 372 340
+    L 372 310
+    L 350 310
+    L 335 270
+    L 320 220
+    L 300 185
+    L 256 150
+    L 212 185
+    L 192 220
+    L 177 270
+    L 162 310
+    L 140 310
+    Z
+    M 210 280
+    L 230 230
+    L 256 200
+    L 282 230
+    L 302 280
+    L 290 300
+    L 270 260
+    L 256 240
+    L 242 260
+    L 222 300
+    Z
+"/>
+  <g filter="url(#glow)">
+    <circle cx="256" cy="56" r="6" fill="#00e5ff"/><circle cx="398" cy="110" r="6" fill="#7b5cff"/><circle cx="456" cy="256" r="6" fill="#ff5c8a"/><circle cx="398" cy="402" r="6" fill="#ff5c8a"/><circle cx="256" cy="456" r="6" fill="#7b5cff"/><circle cx="114" cy="402" r="6" fill="#00e5ff"/><circle cx="56" cy="256" r="6" fill="#00e5ff"/><circle cx="114" cy="110" r="6" fill="#00e5ff"/>
+  </g>
+</svg>
