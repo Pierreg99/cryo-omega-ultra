@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CryoOmega ULTRA IDE — Spectrum Prime</title>
+<link rel="icon" href="favicon.jpg" type="image/jpeg">
+<link rel="apple-touch-icon" href="favicon.jpg">
+<meta property="og:title" content="CryoOmega ULTRA — Spectrum Prime">
+<meta property="og:description" content="Unified CLI, TUI, and Web IDE for Cryo Omega agents.">
+<meta property="og:image" content="og.png">
 <style>
 :root{
   --nx-void:#05070d; --nx-depth:#0a0e1a; --nx-surface:rgba(16,22,38,.72);
@@ -26,6 +31,7 @@ header{display:flex;align-items:center;gap:12px;padding:0 14px}
   background:linear-gradient(90deg,var(--nx-spektrum-2),var(--nx-spektrum-1),var(--nx-spektrum-3));
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .logo small{color:var(--nx-gold);letter-spacing:.2em}
+.brand-mark{width:22px;height:22px;flex-shrink:0;display:block}
 .spacer{flex:1}
 .btn{background:var(--nx-glass);border:1px solid var(--nx-line);color:var(--nx-ink);
   padding:6px 12px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:12px}
@@ -84,6 +90,7 @@ main{display:grid;grid-template-columns:250px 1fr 360px;gap:8px;min-height:0}
 <div id="app">
   <header class="glass">
     <span class="pulse"></span>
+    <img class="brand-mark" src="mark.svg" width="22" height="22" alt="">
     <span class="logo">CRYOMEGA&nbsp;ULTRA <small>SPECTRUM PRIME v0.1.0</small></span>
     <div class="spacer"></div>
     <button class="btn" onclick="openPalette()">⌘K palette</button>
