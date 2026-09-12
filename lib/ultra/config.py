@@ -2,10 +2,19 @@ import json
 import os
 from pathlib import Path
 
-ROOT = Path(os.environ.get("OMEGA_ROOT") or Path(__file__).resolve().parents[3])
+ROOT = Path(os.environ.get("OMEGA_ROOT") or Path(__file__).resolve().parents[2])
 HOME = Path.home()
+DATA_DIR = Path(os.environ.get("OMEGA_DATA") or HOME / ".omega")
 SKILLS_DIR = HOME / ".agents" / "skills"
+AGENTS_JSON = DATA_DIR / "agents.json"
+PLUGINS_DIR = DATA_DIR / "plugins"
+GATEWAY_LOG = DATA_DIR / "gateway.log"
+GATEWAY_PID = DATA_DIR / "gateway.pid"
 OMEGA_YAML = Path(os.environ.get("OMEGA_CONFIG", ROOT / ".omega.yaml"))
+
+GATEWAY_HOST = "127.0.0.1"
+GATEWAY_PORT = int(os.environ.get("OMEGA_GATEWAY_PORT", "8787"))
+BAD_ENTRIES = (".git", "node_modules", "__pycache__")
 
 DEFAULTS = {
     "provider": "minimax",

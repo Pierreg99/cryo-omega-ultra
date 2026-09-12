@@ -91,7 +91,7 @@ main{display:grid;grid-template-columns:250px 1fr 360px;gap:8px;min-height:0}
   <header class="glass">
     <span class="pulse"></span>
     <img class="brand-mark" src="mark.svg" width="22" height="22" alt="">
-    <span class="logo">CRYOMEGA&nbsp;ULTRA <small>SPECTRUM PRIME v0.1.0</small></span>
+    <span class="logo">CRYOMEGA&nbsp;ULTRA <small>OMNILINK v0.2.0</small></span>
     <div class="spacer"></div>
     <button class="btn" onclick="openPalette()">⌘K palette</button>
     <button class="btn" onclick="toggleSkills()">◈ skills</button>
@@ -139,7 +139,8 @@ let tabs = [], active = null;
 
 async function status(){
   const s = await api('/api/status');
-  sys(`ULTRA ${s.version} · root ${s.root.split('/').pop()} · ${s.skills} skills · providers ` +
+  sys(`${s.engine} ${s.version} · root ${s.root.split('/').pop()} · ${s.skills} skills · `+
+      `${s.agents} agents · ${(s.plugins||[]).length} plugins · providers ` +
       Object.entries(s.providers).map(([p,k])=>p[0]+(k?'✓':'·')).join(' '));
 }
 function sys(t){ const d=document.createElement('div'); d.className='msg sys'; d.textContent=t;
@@ -169,6 +170,58 @@ function activate(p){ active=p; $('#editor').value='';
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===p));
 }
 
+let convo = [];  // conversation history sent to the gateway engine
+
+async function chatLive(text){
+  const d = document.createElement('div'); d.className='msg ai'; d.textContent='… thinking';
+  $('#chat').appendChild(d); $('#chat').scrollTop=1e9;
+  convo.push({role:'user', content:text});
+  if(convo.length>24) convo=convo.slice(-24);
+  try{
+    const res = await fetch('/api/chat', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({messages: convo})});
+    const data = await res.json();
+    d.remove();
+    if(data.error){ ai('⟦gateway⟧ '+data.error); convo.pop(); return; }
+    ai(data.text||'');
+    convo.push({role:'assistant', content:data.text||''});
+    if(data.provider) sys(`${data.provider} · ${data.model} · ${data.latency_ms}ms`);
+  }catch(e){ d.remove(); ai('⟦gateway unreachable⟧ '+e); convo.pop(); }
+}
+
+async function agentRun(name, task){
+  const res = await fetch('/api/agents/run', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({agent:name, task})});
+  const data = await res.json();
+  ai(`⟦${data.agent||name}⟧ ${data.output||data.error||''}`);
+}
+
+async function planDraft(task){
+  const res = await fetch('/api/plan', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({task})});
+  const data = await res.json();
+  ai(data.text||data.error||'');
+}
+
+async function listAgents(){
+  const rows = await api('/api/agents');
+  if(!Array.isArray(rows)){ sys('⟦gateway⟧ agents unavailable'); return; }
+  for(const a of rows) ai(`⟦${a.name}⟧ ${(a.persona||'').slice(0,90)}`);
+  sys(`(${rows.length} agent profiles)`);
+}
+
+function newChat(){ convo=[]; sys('conversation cleared'); }
+
+async function pluginsInfo(){
+  const s = await api('/api/status');
+  const p = s.plugins||[];
+  sys(p.length ? 'plugins: '+p.join(', ')
+               : 'plugins: none — `omega plugin install <owner/repo>`');
+}
+
 function send(){
   const inp=$('#chatin'); const text=inp.value.trim(); if(!text) return;
   inp.value='';
@@ -177,13 +230,14 @@ function send(){
   if(text.startsWith('/')){
     const cmd=text.slice(1).split(' ')[0], arg=text.slice(1+cmd.length).trim();
     if(cmd==='skills'){ loadSkills(arg); sys('skills drawer '+(arg?`filtered “${arg}”`:'refreshed')); toggleSkills(true); }
-    else if(cmd==='agent'){ ai(`Dispatch to Cryo orchestrator: ${arg||'(no task)'}\nSpectrum S1→S8 · SafeMode L2 · A22 QA. Engine: omega agent "${arg}" in CLI.`); }
-    else if(cmd==='plan'){ ai(`Plan brief for “${arg}”: scope → risks → staged steps → budget.\nRun \`omega plan "${arg}"\` for the full LLM draft.`); }
-    else if(cmd==='help'){ sys('commands: /skills · /agent · /plan · /help'); }
+    else if(cmd==='agent'){ if(arg) agentRun('orchestrator', arg); else sys('usage: /agent <task>'); }
+    else if(cmd==='plan'){ if(arg) planDraft(arg); else sys('usage: /plan <task>'); }
+    else if(cmd==='agents'){ listAgents(); }
+    else if(cmd==='help'){ sys('commands: /skills · /agent · /plan · /agents · /help'); }
     else sys('unknown /'+cmd);
     return;
   }
-  ai('⟦offline echo⟧ set CRYOMEGA_MINIMAX_KEY for live minimax-m3.\n→ '+text);
+  chatLive(text);
 }
 function ai(t){ const d=document.createElement('div'); d.className='msg ai'; d.textContent=t;
   $('#chat').appendChild(d); $('#chat').scrollTop=1e9; }
@@ -207,6 +261,8 @@ function toggleSkills(force){ const d=$('#skills-drawer');
 const COMMANDS=[
   ['open file tree','loadTree()'],['reload tree','loadTree()'],
   ['skills drawer','toggleSkills()'],['agent console','$("#chatin").focus()'],
+  ['agents registry','listAgents()'],['plugins','pluginsInfo()'],
+  ['new chat','newChat()'],
   ['doctor','omega("doctor")'],['status','status()']];
 function openPalette(){ $('#palette').classList.add('open'); $('#palette-in').value=''; renderPal('');
   $('#palette-in').focus(); }

@@ -1,0 +1,11 @@
+#!/data/data/com.termux/files/usr/bin/python3
+"""omega-gateway — CryoOmega ULTRA engine service entrypoint (v0.2.0 OmniLink)."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+
+from ultra.gateway import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

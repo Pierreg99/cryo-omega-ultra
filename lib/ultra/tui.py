@@ -1,12 +1,17 @@
-"""Immersive TUI chat — block-based terminal (Warp-style) with slash commands."""
+"""Immersive TUI chat — block-based terminal (Warp-style) with slash commands.
+
+Talks to the omega-gateway engine via `client` (auto-spawns when down).
+"""
+import json
 import sys
 
-from . import llm, skills, agents
+from . import client, config, gateway, skills
 
-HELP = """CRYOMEGA ULTRA · chat
+HELP = """CRYOMEGA ULTRA · chat (gateway-backed)
   /help            this panel
   /model <name>    switch model (minimax-m3, claude-sonnet, gpt-4)
-  /agent <task>    dispatch to Cryo orchestrator
+  /agent <task>    dispatch to orchestrator agent
+  /agents [term]   list/search agent registry
   /skills [term]   list/search installed skills
   /plan <task>     draft a plan brief
   /exit            leave"""
@@ -19,7 +24,7 @@ def block(title, body):
     print("╰────────────────────────")
 
 
-def run():
+def _run():
     history = []
     model = None
     block("CRYOMEGA ULTRA · TUI", HELP)
@@ -41,6 +46,16 @@ def run():
             elif cmd == "model":
                 model = arg.strip() or None
                 print(f"model → {model or 'default (minimax-m3)'}")
+            elif cmd == "agents":
+                rows = client.agents_list()
+                if isinstance(rows, dict):
+                    print(rows.get("error", "gateway error"))
+                else:
+                    for a in rows:
+                        if arg and arg not in a["name"] and arg not in (a.get("persona") or ""):
+                            continue
+                        print(f"  {a['name']:<20}{(a.get('persona') or '')[:56]}")
+                    print(f"  ({len(rows)} agents)")
             elif cmd == "skills":
                 found = skills.search(arg) if arg else skills.local_skills()
                 for s in found[:30]:
@@ -50,21 +65,36 @@ def run():
                 if not arg.strip():
                     print("usage: /agent <task>")
                     continue
-                block("AGENT DISPATCH", agents.dispatch(arg.strip())["output"])
+                res = client.agent_run("orchestrator", arg.strip())
+                block("AGENT DISPATCH", json.dumps(res, indent=2))
             elif cmd == "plan":
                 if not arg.strip():
                     print("usage: /plan <task>")
                     continue
-                res = llm.complete(
-                    f"Draft a concise execution plan for: {arg.strip()}", model=model)
-                block("PLAN DRAFT", str(res))
-                history.append({"role": "assistant", "content": str(res)})
+                res = client.plan(arg.strip())
+                block("PLAN DRAFT", res.get("text") or res.get("error", ""))
+                history.append({"role": "assistant", "content": res.get("text", "")})
             else:
                 print(f"unknown command /{cmd} — /help")
             continue
         history.append({"role": "user", "content": line})
         if len(history) > 24:
             history = history[-24:]
-        res = llm.chat(history, model=model)
-        block(f"{res.provider} · {res.model} · {res.latency_ms}ms", res.text)
-        history.append({"role": "assistant", "content": res.text})
+        res = client.chat(history, model=model)
+        if res.get("error"):
+            block("GATEWAY ERROR", res["error"])
+            history.pop()
+            continue
+        text = res.get("text", "")
+        title = (f"{res.get('provider')} · {res.get('model')} · {res.get('latency_ms')}ms")
+        block(title, text)
+        history.append({"role": "assistant", "content": text})
+
+
+def run():
+    if not gateway.ensure_running():
+        block("GATEWAY UNREACHABLE",
+              "Could not start omega-gateway.\n"
+              "Check ~/.omega/gateway.log, or run `omega gateway start`.")
+        return
+    _run()
