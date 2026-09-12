@@ -98,3 +98,11 @@ def plugins():
 
 def plugin_install(repo):
     return _req("POST", "/api/plugins/install", {"repo": repo})
+
+
+def plugin_enable(name, enabled=True):
+    return _req("GET", f"/api/plugins/{name}/{'enable' if enabled else 'disable'}")
+
+
+def plugin_remove(name):
+    return _req("DELETE", f"/api/plugins/{name}")

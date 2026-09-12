@@ -22,6 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 IDE_DIR = REPO / "ide"
 ENGINE_NAME = "python-gateway"
 _STARTED = time.time()
+ACTIVE_PLUGINS = []  # set at boot by plugins.load_all()
 
 try:
     from . import plugins
@@ -31,6 +32,13 @@ except ImportError:  # plugins land in P1
 # Plugin route registry: {(METHOD, path): handler(method, path, query, body)}.
 # Checked only after the built-in API handlers.
 ROUTES = {}
+
+
+class _TCPServer(socketserver.ThreadingTCPServer):
+    """Gateway server: per-request threads + fast port reuse after restart."""
+
+    daemon_threads = True
+    allow_reuse_address = True
 
 
 class _Handler(http.server.SimpleHTTPRequestHandler):
@@ -93,7 +101,7 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             "skills": len(skills.local_skills()),
             "agents": len(agents.list_agents()),
             "providers": {p: bool(config.key_for(p)) for p in config.PROVIDERS},
-            "plugins": list(plugins.discover().keys()) if plugins else [],
+            "plugins": ACTIVE_PLUGINS,
         })
 
     def _api_tree(self, query):
@@ -188,12 +196,21 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path.startswith("/api/agents"):
             return self._api_agents(segs, query)
         if parsed.path.startswith("/api/plugins") and plugins:
+            sp_ = [unquote(s) for s in parsed.path.split("/")]
+            if len(sp_) >= 5 and sp_[4] in ("enable", "disable"):
+                if sp_[3] not in plugins.discover():
+                    self._json({"error": "plugin not found"}, 404)
+                    return
+                state = plugins.set_enabled(sp_[3], sp_[4] == "enable")
+                self._json({"plugin": sp_[3], "enabled": state,
+                            "note": "restart gateway to apply to running routes"})
+                return
             self._json({name: {"name": name, **meta}
                         for name, meta in plugins.discover().items()})
             return
         hit = ROUTES.get(("GET", parsed.path.rstrip("/")))
         if hit:
-            return hit("GET", parsed.path, query, {})
+            return hit(self, "GET", parsed.path, query, {})
         super().do_GET()
 
     def do_POST(self):
@@ -245,9 +262,18 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json({"error": str(e)[:300]}, 400)
             return
+        if parsed.path.startswith("/api/plugins") and len(segs) >= 5:
+            if segs[4] in ("enable", "disable") and plugins:
+                if segs[3] not in plugins.discover():
+                    self._json({"error": "plugin not found"}, 404)
+                    return
+                state = plugins.set_enabled(segs[3], segs[4] == "enable")
+                self._json({"plugin": segs[3], "enabled": state,
+                            "note": "restart gateway to apply to running routes"})
+                return
         hit = ROUTES.get(("POST", parsed.path.rstrip("/")))
         if hit:
-            return hit("POST", parsed.path, None, body)
+            return hit(self, "POST", parsed.path, None, body)
         self._json({"error": "not found"}, 404)
 
     def do_DELETE(self):
@@ -257,9 +283,13 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             removed = agents.remove_agent(segs[3])
             self._json({"removed": removed}, 200 if removed else 404)
             return
+        if parsed.path.startswith("/api/plugins/") and len(segs) >= 4 and plugins:
+            removed = plugins.remove(segs[3])
+            self._json({"removed": removed}, 200 if removed else 404)
+            return
         hit = ROUTES.get(("DELETE", parsed.path.rstrip("/")))
         if hit:
-            return hit("DELETE", parsed.path, None, {})
+            return hit(self, "DELETE", parsed.path, None, {})
         self._json({"error": "not found"}, 404)
 
 
@@ -274,11 +304,13 @@ def serve(port=None, host=None):
     except OSError:
         pass
     handler = functools.partial(_Handler)
-    with socketserver.ThreadingTCPServer((host, port), handler) as httpd:
-        httpd.daemon_threads = True
-        httpd.allow_reuse_address = True
+    with _TCPServer((host, port), handler) as httpd:
         print(f"⟦CRYOMEGA ULTRA GATEWAY⟧ {ENGINE_NAME} v{__version__}  "
               f"http://{host}:{port}", flush=True)
+        if plugins:
+            loaded = plugins.load_all()
+            ACTIVE_PLUGINS[:] = loaded
+            print(f"  plugins: {loaded if loaded else 'none enabled'}", flush=True)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

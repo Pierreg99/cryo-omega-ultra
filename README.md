@@ -26,7 +26,7 @@ A unified command-line tool, interactive TUI, and browser-based IDE workspace fo
 - **Web IDE** (`omega ide` · `omega chat --web`): explorer, editor, chat, skills/agent
   drawers, Ctrl-K palette
 - **System Doctor** (`omega doctor`); engine control (`omega gateway status|start|stop|restart|log`)
-- **Plugins** *(P1)*: installable extensions adding CLI commands + web routes
+- **Plugins**: installable extensions adding web routes (`omega plugin list|install|info|enable|disable|rm`; example in `examples/plugins/omega-hello`)
 - **SSE streaming** *(P2)*: real token streaming from the providers
 
 ## Structure
@@ -41,8 +41,10 @@ A unified command-line tool, interactive TUI, and browser-based IDE workspace fo
 │   └── index.html        # Self-contained Web IDE interface
 └── lib/
     └── ultra/            # Core package (agents, client, config, doctor,
-                          #   gateway, llm, skills, tui; plugins* in P1)
+                          #   gateway, llm, plugins, skills, tui)
 ```
+- `examples/plugins/` — installable reference plugins
+- `tools/eval_omnilink.py` — 5-dimension eval harness (A021 gateway)
 
 ## Quick Start
 

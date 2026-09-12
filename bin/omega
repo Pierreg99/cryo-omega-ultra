@@ -180,6 +180,42 @@ def cmd_ide(args):
     print(f"IDE at {url} (gateway engine)")
 
 
+def cmd_plugin(args):
+    _gw()
+    action = args.action
+    if action == "list":
+        rows = client.plugins()
+        if isinstance(rows, dict) and rows.get("error"):
+            print(rows.get("error"))
+            return
+        for name, meta in rows.items():
+            mark = "" if meta.get("enabled", True) else "  (disabled)"
+            print(f"  {name:<20} v{meta.get('version') or '?'} "
+                  f"[{meta.get('runtime')}]{mark} {(meta.get('description') or '')[:48]}")
+        print(f"\n({len(rows)} plugins · {config.PLUGINS_DIR})")
+    elif action == "install":
+        res = client.plugin_install(args.target)
+        if res.get("error"):
+            print(f"✘ {res['error']}")
+            return
+        for n in res.get("installed", []):
+            print(f"  + {n}")
+        print("restart the gateway to activate: omega gateway restart")
+    elif action == "info":
+        rows = client.plugins()
+        meta = (rows or {}).get(args.target)
+        print(json.dumps(meta, indent=2) if meta
+              else f"plugin {args.target} not found")
+    elif action in ("enable", "disable"):
+        res = client.plugin_enable(args.target, action == "enable")
+        print(f"plugin {args.target}: enabled={res.get('enabled')} · "
+              f"restart gateway to apply to running routes")
+    elif action == "rm":
+        res = client.plugin_remove(args.target)
+        print("removed" if res.get("removed")
+              else f"plugin {args.target} not found")
+
+
 def main():
     p = argparse.ArgumentParser(prog="omega", description="CryoOmega ULTRA CLI")
     p.add_argument("--version", action="version", version=f"omega {__version__}")
@@ -233,6 +269,11 @@ def main():
     iv.add_argument("--port", type=int, default=None)
     iv.set_defaults(func=cmd_ide)
 
+    pl = sub.add_parser("plugin", help="gateway plugins")
+    pl.add_argument("action", choices=["list", "install", "info", "enable", "disable", "rm"])
+    pl.add_argument("target", nargs="?", default="")
+    pl.set_defaults(func=cmd_plugin)
+
     args = p.parse_args()
     if args.cmd == "agent" and not args.task:
         p.error("agent requires a task")
@@ -242,6 +283,8 @@ def main():
         p.error("agents run requires a task")
     if args.cmd == "skills" and args.action in ("search", "add", "info") and not args.target:
         p.error(f"skills {args.action} requires a target")
+    if args.cmd == "plugin" and args.action != "list" and not args.target:
+        p.error(f"plugin {args.action} requires a target")
     args.func(args)
 
 
