@@ -1,0 +1,42 @@
+name: Browser Extension
+
+on:
+  push:
+    paths: ['browser-extension/**','.github/workflows/browser-extension.yml']
+  pull_request:
+    paths: ['browser-extension/**','.github/workflows/browser-extension.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install packaging tools
+        run: python3 -m pip install --disable-pip-version-check cairosvg
+      - name: Validate and package
+        working-directory: browser-extension
+        run: node scripts/package.mjs
+      - name: Validate manifests and icons
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('browser-extension/dist')
+          for target in ('chrome','brave','edge','opera','firefox'):
+              m=json.loads((root/target/'manifest.json').read_text())
+              assert m['manifest_version']==3
+              assert m['name']=='Cryo Omega Promoter Suite'
+          for size in (16,32,48,128):
+              assert (Path('browser-extension/assets')/f'icon{size}.png').exists()
+          print('ULTRA extension validation passed')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cryo-omega-ultra-browser-extension
+          path: |
+            browser-extension/dist/*.zip
+            browser-extension/dist/*.xpi
