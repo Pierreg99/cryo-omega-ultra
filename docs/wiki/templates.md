@@ -1,140 +1,170 @@
 # Documentation Templates
 
-Use these templates for recurring document types. Copy a template, replace placeholders, then remove unused sections only when they are genuinely irrelevant.
+All templates are deliberately compact. Add repository-specific details rather than copying generic prose.
 
 ## Decision Log / ADR
 
-```md
-# ADR-XXXX: <Decision title>
+```markdown
+# ADR-NNNN: <Decision title>
 
-- **Status:** Proposed | Accepted | Superseded | Deprecated
-- **Date:** YYYY-MM-DD
-- **Owner:** <role>
-- **Reviewers:** <roles>
+- Status: Proposed | Accepted | Superseded | Rejected
+- Date: YYYY-MM-DD
+- Owners: <role or person>
 
 ## Context
-
-What problem requires a decision?
+What problem or constraint requires a decision?
 
 ## Decision
+State the chosen approach and its boundaries.
 
-What was chosen?
-
-## Alternatives Considered
-
-- Option A — advantages / disadvantages
-- Option B — advantages / disadvantages
+## Alternatives
+- <alternative> — reason not selected
+- <alternative> — reason not selected
 
 ## Consequences
+- Positive: <effect>
+- Negative: <trade-off>
+- Operational: <impact>
 
-- Positive:
-- Negative:
-- Operational:
-- Security:
-
-## Migration / Rollout
-
-- <step>
-
-## Validation
-
-- [ ] Tests updated
-- [ ] Documentation updated
-
-## References
-
-- Issue:
-- PR:
+## Verification
+How will we know this decision is working?
 ```
+
+Example decisions:
+
+- Keep gateway execution authoritative instead of duplicating business logic in clients.
+- Use a projected CRS for distance/area calculations rather than degrees when the workflow is geospatial.
 
 ## Runbook
 
-```md
+```markdown
 # Runbook: <Action>
 
-- **Owner:** <role>
-- **Severity:** P1 | P2 | P3 | P4
-- **Environment:** Local | Dev | Staging | Production
-- **Last Reviewed:** YYYY-MM-DD
-
 ## Purpose
+What operational problem does this procedure solve?
+
 ## Preconditions
-## Detection
+- Access
+- Environment
+- Safety checks
+
 ## Procedure
-### 1. Check
-### 2. Action
-### 3. Verify
+1. <command/action>
+2. <command/action>
+
+## Verification
+Expected healthy state and exact checks.
+
 ## Rollback
+How to return to the previous safe state.
+
 ## Escalation
+When and where to escalate.
+
 ## Evidence
-## Post-Checks
+What logs, timestamps, versions, and artifacts to record.
 ```
+
+Examples:
+
+- Restart the gateway and verify status plus a smoke request.
+- Collect logs and redact secrets before attaching them to an incident.
 
 ## Incident / Postmortem
 
-```md
-# Incident: <Short Title>
+```markdown
+# Incident: <Title>
 
-- **Incident ID:** INC-YYYY-XXXX
-- **Date:** YYYY-MM-DD
-- **Severity:** P1 | P2 | P3 | P4
-- **Owner:** <role>
+- Date: YYYY-MM-DD
+- Severity: SEV-1 | SEV-2 | SEV-3 | SEV-4
+- Status: Investigating | Mitigated | Resolved
+- Owner: <role>
 
 ## Summary
+What happened and what was affected?
+
 ## Impact
+Users, components, data, duration.
+
 ## Timeline
+- HH:MM — <event>
+- HH:MM — <event>
+
+## Detection
+How was the incident detected?
+
 ## Root Cause
-## Contributing Factors
-## Resolution
+Technical cause, contributing factors, and missing controls.
+
+## Mitigation
+What reduced or stopped the impact?
+
 ## Corrective Actions
-## Detection Improvements
+- [ ] <action> — owner — due date
+
 ## Lessons Learned
-## References
+What should change in code, operations, tests, or documentation?
 ```
+
+Examples:
+
+- Gateway unavailable after deployment due to a configuration mismatch.
+- Credential exposed in a log; credential rotation is mandatory corrective action.
 
 ## Meeting Notes
 
-```md
+```markdown
 # Meeting: <Topic>
 
-- **Date:** YYYY-MM-DD
-- **Participants:** <names/roles>
-- **Owner:** <name>
+- Date: YYYY-MM-DD
+- Participants: <names/roles>
 
-## Agenda
+## Purpose
+Why was the meeting held?
+
 ## Decisions
-## Discussion
-## Action Items
-| Action | Owner | Due | Status |
-|---|---|---|---|
-## Risks / Blockers
-## Follow-up
+- <decision>
+
+## Open Questions
+- <question> — owner
+
+## Actions
+- [ ] <action> — owner — due date
+
+## References
+- <issue / PR / ADR / document>
 ```
 
 ## Release Notes
 
-```md
-# CryoOmega ULTRA <version>
-
-- **Release date:** YYYY-MM-DD
-- **Release type:** Major | Minor | Patch
+```markdown
+# <Version> — YYYY-MM-DD
 
 ## Summary
+What changed and why?
+
 ## Added
+- <feature>
+
 ## Changed
+- <behavior or interface>
+
 ## Fixed
+- <bug>
+
 ## Security
+- <security-relevant change>
+
 ## Breaking Changes
+- <breaking change> or `None`
+
 ## Migration
-## Deprecations
+1. <step>
+2. <step>
+
 ## Verification
-## References
+- <test suite / CI run / artifact>
+
+## Known Issues
+- <issue> or `None`
 ```
-
-## Document classification
-
-- **Quickstart:** minimum successful path.
-- **Tutorial:** complete a guided use case.
-- **How-to:** solve one concrete task.
-- **Reference:** exact commands, APIs and configuration.
-- **Concept:** explain architecture, terminology or design principles.

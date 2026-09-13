@@ -1,62 +1,68 @@
-# Project Overview
+# Home / Project Overview
 
-CryoOmega ULTRA is a unified command-line tool, interactive TUI and browser-based IDE workspace for autonomous agents and skills orchestration. The `omega-gateway` engine owns computation while CLI, TUI and IDE act as clients. fileciteturn0file0L2-L2
+## What is CryoOmega ULTRA?
 
-## Goals
+CryoOmega ULTRA is a unified software workspace centered on the `omega-gateway` runtime with CLI, TUI, and browser-based Web IDE surfaces.
 
-- Provide one coherent runtime for CLI, TUI and Web IDE.
-- Keep gateway computation centralized and clients lightweight.
-- Expose agents, skills and plugins through explicit interfaces.
-- Keep operational state separate from source-controlled project files.
-- Make local-first operation the safe default.
+This page is the navigation entry point for technical documentation. It is not a marketing page.
 
 ## Scope
 
 ### In scope
 
-CLI, TUI, Web IDE, gateway, agents, skills, plugins, configuration, API, testing, operations, security and releases.
+- CLI usage and configuration
+- TUI behavior and terminal workflows
+- Web IDE behavior
+- gateway runtime and interfaces
+- agents, skills, and plugins
+- operations and incident response
+- security and contribution rules
+- testing and releases
 
 ### Out of scope
 
-Marketing copy, non-technical product claims and undocumented architectural assumptions.
+- unrelated repositories
+- unsupported product promises
+- undocumented external services
 
-## Repository map
+## Start here
 
-```text
-bin/                 CLI and gateway entry points
-lib/ultra/           Core runtime modules
-ide/                 Self-contained Web IDE
-browser-extension/   Browser extension client/integration
-examples/plugins/    Reference plugins
-docs/                Technical documentation
-tests/               Test suites
-tools/               Evaluation and development tools
-```
+1. [Getting Started](getting-started/index.md)
+2. [Architecture](architecture/index.md)
+3. [CLI, Gateway & IDE](cli-gateway-ide/index.md)
+4. [Operations](operations/index.md)
+5. [Security](security/index.md)
+6. [Development](development/index.md)
+7. [Releases](releases/index.md)
 
-## Key runtime data
-
-- `OMEGA_DATA` defaults to `~/.omega`.
-- `OMEGA_ROOT` identifies the workspace/File API root.
-- Skills live in `~/.agents/skills`.
-- Plugins live in `$OMEGA_DATA/plugins`.
-- Agent profiles live in `$OMEGA_DATA/agents.json`. fileciteturn1file0L2-L2
-
-## Canonical links
+## Core repository links
 
 - [Repository](https://github.com/Pierreg99/cryo-omega-ultra)
 - [Issues](https://github.com/Pierreg99/cryo-omega-ultra/issues)
 - [Pull Requests](https://github.com/Pierreg99/cryo-omega-ultra/pulls)
 - [Actions](https://github.com/Pierreg99/cryo-omega-ultra/actions)
-- [Security Policy](../../SECURITY.md)
-- [Changelog](../../CHANGELOG.md)
+- [Discussions](https://github.com/Pierreg99/cryo-omega-ultra/discussions)
+- [GitHub Wiki](https://github.com/Pierreg99/cryo-omega-ultra/wiki)
 
-## Planned pages
+## Existing source-of-truth documents
 
-- [Goals & Non-Goals](goals.md)
-- [Repository Map](repository-map.md)
-- [FAQ](faq.md)
-- [Glossary](glossary.md)
+- [`README.md`](../../README.md)
+- [`CONTRIBUTING.md`](../../CONTRIBUTING.md)
+- [`SECURITY.md`](../../SECURITY.md)
+- [`CHANGELOG.md`](../../CHANGELOG.md)
+- [`docs/architecture.md`](../architecture.md)
+- [`docs/configuration.md`](../configuration.md)
+- [`docs/api.md`](../api.md)
+- [`docs/testing.md`](../testing.md)
 
 ## How to use this page
 
-Use this page for orientation and scope. Move to [Getting Started](getting-started/index.md) for execution or [Architecture](architecture/index.md) for implementation details.
+Use this page for orientation only. For a command use Reference; for a procedure use a How-to or Runbook; for architecture rationale use Concepts and ADRs.
+
+## Planned pages
+
+- [Goals](goals.md)
+- [Repository Map](repository-map.md)
+- [FAQ](faq.md)
+- [Glossary](glossary.md)
+- [GitHub Learning Path](github-learning.md)

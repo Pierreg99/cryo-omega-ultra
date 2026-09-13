@@ -1,32 +1,69 @@
 # Operations & Runbooks
 
-This section provides concrete operational procedures for the gateway and surrounding runtime. Existing operations documentation identifies `omega gateway start|status|stop|restart|log` and `omega doctor` as the primary local controls. fileciteturn2file0L2-L2
+## Purpose
 
-## Runtime state
+Provide repeatable procedures for starting, inspecting, deploying, and recovering CryoOmega ULTRA.
 
-By default, runtime state is held under `~/.omega`, including agent registry, plugins, PID state and logs. fileciteturn2file0L2-L2
+## Operational model
 
-## Safety baseline
+```text
+environment → gateway → clients → agents/skills/plugins → providers
+```
 
-Keep the gateway on loopback unless remote access is explicitly required. Non-loopback binding requires `OMEGA_GATEWAY_ALLOW_REMOTE=1`, while the current File API has no authentication. fileciteturn3file0L2-L2
+Every runbook should state prerequisites, expected state, commands, verification, and rollback or escalation.
 
-## Runbooks
+## Runbook: Restart Gateway
 
-- [Restart Gateway](runbooks/restart-gateway.md)
-- [Collect Logs](runbooks/collect-logs.md)
-- [Deployment](runbooks/deployment.md)
-- [Backup & Restore](backup-restore.md)
+### Preconditions
 
-## Planned pages
+- Access to the target environment.
+- Confirm whether a restart is safe for active sessions.
+
+### Procedure
+
+```bash
+./bin/omega gateway status
+./bin/omega gateway restart
+./bin/omega gateway status
+```
+
+### Verification
+
+- Status reports the expected running state.
+- A smoke request from the intended client succeeds.
+- Logs contain no new startup error.
+
+## Runbook: Collect Logs
+
+1. Run `./bin/omega gateway status`.
+2. Run `./bin/omega gateway log`.
+3. Capture timestamps, command output, environment identifier, and relevant error messages.
+4. Remove secrets and tokens before attaching logs to an issue.
+
+## Runbook: Deployment
+
+1. Confirm the release candidate and intended environment.
+2. Review CI and release checks.
+3. Deploy using the repository's documented deployment mechanism.
+4. Verify gateway health and a representative client path.
+5. Record deployment version and outcome.
+
+## Incident handling
+
+Open an incident record when service impact, data integrity risk, security impact, or repeated failure requires coordinated investigation.
+
+## Planned subpages
 
 - [Environments](environments.md)
-- [Deployment Guide](deployment.md)
-- [Rollback Guide](rollback.md)
+- [Deployment](deployment.md)
+- [Rollback](rollback.md)
 - [Monitoring](monitoring.md)
+- [Backup & Restore](backup-restore.md)
 - [Incident Response](incident-response.md)
-- [Incident Reports](incidents/)
-- [Disaster Recovery](disaster-recovery.md)
+- [Restart Gateway](runbooks/restart-gateway.md)
+- [Collect Logs](runbooks/collect-logs.md)
+- [Deployment Runbook](runbooks/deployment.md)
 
 ## How to use this page
 
-Start here for operational navigation. For an active problem, select the matching runbook and follow its verification/escalation steps.
+Use a runbook when changing runtime state. Do not substitute a runbook for architectural documentation or a command reference.

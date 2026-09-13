@@ -1,31 +1,63 @@
 # Architecture & Design
 
-CryoOmega ULTRA uses a gateway-centered runtime. `omega-gateway` owns computation; CLI, TUI and Web IDE are clients. The current architecture also keeps Skills, Plugins and the Agent Registry in distinct data homes. fileciteturn1file0L2-L2
+## Purpose
 
-## Architecture goals
+Explain how the major CryoOmega ULTRA components interact and where architectural decisions are recorded.
 
-- One runtime boundary for clients.
-- Explicit module responsibilities.
-- Separate trust boundaries for skills and plugins.
-- Inspectable configuration and persistent state.
-- Local-first safe defaults.
+## System model
 
-## Pages
+```text
+CLI ───────┐
+TUI ───────┼──→ omega-gateway ─→ providers / agents / skills / plugins
+Web IDE ───┘
+```
+
+The gateway is the central runtime boundary. Client surfaces should remain thin and use stable interfaces rather than reimplementing runtime behavior.
+
+## Major modules
+
+- `bin/` — command entry points and operational wrappers.
+- `lib/ultra/` — core application/runtime implementation.
+- `ide/` — Web IDE surface.
+- `browser-extension/` — browser integration and packaging.
+- `tools/` — development, packaging, and maintenance tools.
+- `tests/` — automated verification.
+- `docs/` — technical documentation and source references.
+
+## Data flow
+
+1. A user initiates an action through CLI, TUI, or Web IDE.
+2. The client validates basic input and calls the gateway or local runtime interface.
+3. The gateway resolves configuration and execution policy.
+4. Agents, skills, plugins, and providers execute within their defined boundaries.
+5. Results and diagnostics flow back to the client surface.
+
+## Agents and skills
+
+Agents represent higher-level execution roles. Skills provide bounded reusable procedures. Persistent agent instructions describe repository or path conventions; task-specific skills should contain task-specific behavior.
+
+## Plugin architecture
+
+Plugins extend the runtime through a defined plugin interface. Because plugins are executable code, plugin trust and lifecycle rules belong in the security and plugin documentation.
+
+## Design principles
+
+- Prefer stable narrow interfaces.
+- Keep clients thin and the runtime authoritative.
+- Treat configuration and secrets as explicit boundaries.
+- Separate operational procedures from architectural concepts.
+- Record material architectural decisions as ADRs.
+
+## Planned subpages
 
 - [Component Map](component-map.md)
 - [Data Flow](data-flow.md)
 - [Agent Architecture](agent-architecture.md)
 - [Skill Architecture](skill-architecture.md)
 - [Plugin Architecture](plugin-architecture.md)
-- [Storage & Data Homes](storage.md)
-- [Design Principles](design-principles.md)
-- [ADR Index](adrs/index.md)
-
-## Existing source
-
-- [Existing architecture document](../../architecture.md)
-- [Memory model](../../memory-model.md)
+- [Storage](storage.md)
+- [ADRs](adrs/index.md)
 
 ## How to use this page
 
-Use this page to identify the right architectural document. Use ADRs to understand why a decision was made and component pages to understand how a subsystem works.
+Use this page to understand boundaries and data flow. Consult component references for implementation details and ADRs for historical design rationale.

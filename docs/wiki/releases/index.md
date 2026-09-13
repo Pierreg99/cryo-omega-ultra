@@ -1,67 +1,65 @@
 # Releases & Changelog
 
-Release documentation records user-visible and operational impact without replacing the root `CHANGELOG.md` as the chronological source of truth. The repository also maintains `CHANGELOG_EXTENSION.md` for extension-specific changes. fileciteturn0file0L2-L2
+## Purpose
 
-## Release format
+Keep version history, compatibility expectations, migrations, and release verification in one navigable documentation area.
 
-Every release should cover:
+## Release sources
 
-- Version and date
-- Added / Changed / Fixed
-- Security impact
-- Breaking changes
-- Migration steps
-- Verification
+- [`CHANGELOG.md`](../../CHANGELOG.md) — canonical chronological changelog.
+- `docs/wiki/releases/` — explanatory release notes and migration material.
+- Git tags and GitHub Releases — published version identity and artifacts.
 
-## Example
+## Release workflow
 
-# 0.4.0
+```text
+change → tests → security → changelog → version/tag → release → artifact verification
+```
 
-- **Release type:** Minor
-- **Status:** Example
+## Example release entry
+
+# 0.5.0 — YYYY-MM-DD
+
+## Summary
+Consolidate the gateway, documentation, and development workflow improvements included in this release.
 
 ## Added
 
-- <feature>
+- Expanded technical wiki navigation.
+- GitHub learning and repository-engineering guidance.
 
 ## Changed
 
-- <change>
+- Clarified operational and security documentation boundaries.
 
 ## Fixed
 
-- <fix>
-
-## Security
-
-- <security change or None>
+- Documentation navigation inconsistencies.
 
 ## Breaking Changes
 
-- <breaking change or None>
+None unless explicitly listed in the final release notes.
 
 ## Migration
 
-```bash
-<command/config update>
-```
+1. Read the release-specific migration notes.
+2. Run the documented validation commands.
+3. Confirm gateway and client compatibility.
 
 ## Verification
 
-- [ ] CLI smoke test
-- [ ] Gateway smoke test
-- [ ] TUI smoke test
-- [ ] Web IDE smoke test
-- [ ] Plugin regression tests
-- [ ] Documentation reviewed
+- CI status is green.
+- Release artifacts are present and attributable to the release commit.
+- Documentation matches the released behavior.
 
-## Planned pages
+## Planned subpages
 
 - [Compatibility](compatibility.md)
 - [Breaking Changes](breaking-changes.md)
-- [Migrations](migrations/)
 - [Deprecations](deprecations.md)
+- [Migration Guides](migrations/index.md)
+- [Version Notes](index.md)
 
 ## How to use this page
 
-Use this index for release navigation. Use `CHANGELOG.md` for the complete chronological project history.
+Use this section when upgrading, diagnosing version differences, or preparing a release. Do not duplicate the complete changelog; link to the canonical changelog instead.

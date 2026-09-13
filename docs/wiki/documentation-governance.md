@@ -1,56 +1,67 @@
-# Documentation Governance
+# Wiki & Documentation Governance
+
+## Purpose
+
+This document defines how the CryoOmega ULTRA technical wiki is organized, changed, reviewed, and kept aligned with the codebase.
+
+## Scope
+
+The rules apply to `docs/wiki/` and to documentation changes that describe CLI, TUI, Web IDE, gateway, agents, skills, plugins, operations, security, releases, and contribution practices.
 
 ## Ownership
 
-| Section | Owner |
-|---|---|
-| Overview | Project Maintainer |
-| Getting Started | Developer Experience / Maintainer |
-| Architecture | Tech Lead / Architecture Owner |
-| CLI/Gateway/IDE | Component Maintainer |
-| Operations | SRE / DevOps |
-| Security | Security Owner |
-| Plugins | Extension Maintainer |
-| Development | Engineering Lead |
-| Releases | Release Owner |
+| Area | Owner | Review cadence |
+|---|---|---|
+| Overview / Goals | Project Maintainer | Quarterly |
+| Getting Started | Developer Experience | Monthly after functional changes |
+| Architecture | Technical Lead | Quarterly and after architecture changes |
+| CLI / Gateway / IDE | Component Maintainers | Per interface change |
+| Operations / Runbooks | Operations Owner | Quarterly and after incidents |
+| Security | Security Owner | Quarterly and after security changes |
+| Plugins / Extensions | Plugin Maintainer | Per API or lifecycle change |
+| Development / Contribution | Maintainers | Quarterly |
+| Releases | Release Owner | Every release |
 
-## Review policy
+## Contribution rules
 
-Documentation changes use the same Pull Request workflow as code. A PR must update documentation when it changes a public command/API, runtime behavior, deployment procedure, security boundary or plugin lifecycle.
+1. Documentation changes are submitted through pull requests.
+2. Behavior-changing code must update the relevant documentation in the same change whenever practical.
+3. Examples that claim to run must be verified by the maintainer or automated checks.
+4. URLs must be checked when a page is materially changed.
+5. Secret values, personal tokens, private paths, and environment-specific credentials must never be committed.
+6. Prefer linking to an existing source of truth over duplicating it.
 
-## Review frequency
+## Review checklist
 
-- Architecture: every 3 months and after architectural changes.
-- Operations: every 3 months and after operational changes.
-- Security: every 3 months and after security-boundary changes.
-- CLI/API reference: on interface changes.
-- Getting Started: on installation or command changes.
-- Releases: every release.
+- [ ] The page answers one concrete question or task.
+- [ ] Quickstart, tutorial, how-to, reference, concept, and runbook roles are not mixed.
+- [ ] Commands and configuration names match the implementation.
+- [ ] Examples are safe to copy.
+- [ ] Internal links resolve.
+- [ ] No secrets or machine-specific paths are present.
+- [ ] Ownership and review cadence still match reality.
 
-## Quality gates
+## Quality metrics
 
-- No broken internal links.
-- No unexplained placeholders in published pages.
-- Examples are tested or explicitly labelled illustrative.
-- No secrets or sensitive credentials in examples.
-- Every runbook has an owner, preconditions, verification and rollback/escalation guidance.
-- Every ADR has a status and date.
+Track a small set of signals:
 
-## Metrics
+- number of open documentation issues
+- age of the oldest documentation issue
+- broken-link count
+- percentage of major features with an owner and reference page
+- percentage of release notes linked from the changelog
+- top documentation pages by usage when analytics are available
 
-Track a small set of useful signals:
+## Source-of-truth hierarchy
 
-- broken links: target 0
-- stale pages past review interval: target 0
-- open documentation issues
-- runbooks without owners
-- ADRs without status
-- documentation changes accompanying relevant code changes
+```text
+Implementation / tests
+        ↓
+API or configuration reference
+        ↓
+Wiki navigation and explanatory pages
+        ↓
+Tutorials and examples
+```
 
-## Naming
-
-Use `kebab-case` for file and directory names. Use `NNNN-short-title.md` for ADRs, `YYYY-MM-DD-short-title.md` for incidents and `<version>.md` for release pages. Avoid spaces and special characters.
-
-## Source-of-truth policy
-
-Do not silently duplicate `README.md`, `SECURITY.md`, `CHANGELOG.md`, `docs/architecture.md`, `docs/configuration.md`, `docs/api.md`, `docs/operations.md`, `docs/plugin-system.md`, `docs/adr/` or `docs/runbooks/`. Link to them unless the wiki intentionally becomes the new source of truth through a reviewed migration.
+When a conflict exists, verify against the implementation and tests first, then update the documentation.
