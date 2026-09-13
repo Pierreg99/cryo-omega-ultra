@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.2.2] — unreleased
+## [0.3.0] — unreleased
+### Added
+- ADR-0004 plugin load trust: remote install allowlist / `OMEGA_PLUGIN_ALLOW_REMOTE`
+- Remote installs disabled until explicit enable
+- Domain homes + local-vs-Mesh ID notes in architecture docs
+
+## [0.2.2] — 2026-09-13
 ### Added
 - SECURITY.md, threat model, PR security checklist
 - docs: architecture, development, configuration, api, plugins, testing, operations, runbooks

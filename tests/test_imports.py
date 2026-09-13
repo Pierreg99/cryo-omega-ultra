@@ -12,4 +12,4 @@ import ultra.tui
 
 
 def test_version():
-    assert ultra.__version__.startswith("0.2.")
+    assert ultra.__version__.startswith("0.")

@@ -17,7 +17,7 @@
 |----|--------|----------|----------------|-----|
 | T1 | Remote File API exposure | High | Loopback default + `OMEGA_GATEWAY_ALLOW_REMOTE` gate | Auth still absent if remote |
 | T2 | Secret leakage to git/logs | High | Env-only keys; `.gitignore` `.env` | Log redaction incomplete |
-| T3 | Malicious plugin | High | Manual install; disable list | No signature/allowlist (0.3) |
+| T3 | Malicious plugin | High | Allowlist / ALLOW_REMOTE; remote installs disabled; disable list | Signatures / subprocess sandbox later |
 | T4 | Path traversal via `/api/file` | Med | `_safe_root` resolve+relative_to | Keep regression tests |
 | T5 | Prompt injection via skills/docs | Med | Operator-trusted content | No sanitizer yet |
 | T6 | SSRF via provider URL env | Low | Operator-controlled env URLs | Document risk |

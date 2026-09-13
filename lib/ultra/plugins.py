@@ -21,6 +21,37 @@ MANIFEST = "plugin.json"
 ENTRY = "plugin.py"
 
 
+def _allowlist_file():
+    return config.DATA_DIR / "plugins-allowlist.json"
+
+
+def load_allowlist():
+    """Remote install allowlist: exact `owner/repo` or `owner/*` globs."""
+    try:
+        data = json.loads(_allowlist_file().read_text())
+    except (OSError, ValueError):
+        return []
+    if isinstance(data, dict):
+        data = data.get("allow", data.get("repos", []))
+    return [str(x).strip() for x in (data or []) if str(x).strip()]
+
+
+def remote_install_permitted(repo: str) -> bool:
+    """Remote GitHub clones require allow flag or allowlist match."""
+    if os.environ.get("OMEGA_PLUGIN_ALLOW_REMOTE", "").lower() in ("1", "true", "yes"):
+        return True
+    repo = repo.strip().lower()
+    for entry in load_allowlist():
+        e = entry.lower()
+        if e.endswith("/*"):
+            if repo.startswith(e[:-1]):
+                return True
+        elif e == repo:
+            return True
+    return False
+
+
+
 def discover():
     """Scan PLUGINS_DIR: {name: {manifest fields + enabled/path}}."""
     out = {}
@@ -105,19 +136,30 @@ def load_all():
 
 
 def install(repo, target=None):
-    """Install plugin(s) from `owner/repo` (clone) or a local directory path."""
+    """Install plugin(s) from `owner/repo` (clone) or a local directory path.
+
+    Local paths always allowed. Remote GitHub clones require
+    `OMEGA_PLUGIN_ALLOW_REMOTE=1` or a match in `plugins-allowlist.json`.
+    Remote installs are disabled by default until `omega plugin enable`.
+    """
     repo = repo.strip().removeprefix("https://github.com/").removesuffix("/").removesuffix(".git")
     if not repo:
         raise ValueError("install requires owner/repo or a local plugin directory")
     target = Path(target or config.PLUGINS_DIR)
     target.mkdir(parents=True, exist_ok=True)
     if Path(repo).is_dir():  # local fixture / in-tree plugin
-        return _install_from(Path(repo), target)
+        return _install_from(Path(repo), target, disable=False)
     local = Path.cwd() / repo
     if local.is_dir():
-        return _install_from(local, target)
+        return _install_from(local, target, disable=False)
     if "/" not in repo:
         raise ValueError("expected owner/repo or local path")
+    if not remote_install_permitted(repo):
+        raise PermissionError(
+            f"remote plugin install refused for {repo!r}: set "
+            "OMEGA_PLUGIN_ALLOW_REMOTE=1 or add owner/repo to "
+            f"{_allowlist_file()} (see ADR-0004)"
+        )
     tmp = Path(tempfile.mkdtemp(prefix="omega-plugin-"))
     try:
         r = subprocess.run(
@@ -126,12 +168,12 @@ def install(repo, target=None):
             capture_output=True, text=True, timeout=120)
         if r.returncode != 0:
             raise RuntimeError(f"clone failed: {r.stderr.strip()[:200]}")
-        return _install_from(tmp / "repo", target)
+        return _install_from(tmp / "repo", target, disable=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def _install_from(src, target):
+def _install_from(src, target, disable=False):
     manifests = sorted(src.rglob(MANIFEST))
     if not manifests:
         raise RuntimeError(f"no {MANIFEST} manifest found in {src}")
@@ -144,6 +186,8 @@ def _install_from(src, target):
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(mf.parent, dest, ignore=shutil.ignore_patterns(".git"))
+        if disable:
+            set_enabled(name, False)
         installed.append(name)
     return installed
 

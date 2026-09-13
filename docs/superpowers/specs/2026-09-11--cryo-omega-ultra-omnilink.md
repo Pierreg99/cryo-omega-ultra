@@ -21,7 +21,7 @@ decoupled **gateway/sidecar** architecture:
 
 A single standalone engine service, **`omega-gateway`** (own process, `127.0.0.1:8787`),
 owns all computation. The CLI and the Web IDE are both *clients*. The gateway serves the
-static IDE and the REST + SSE API on one port. A future Node orchestrator arrives as a
+static IDE and the REST API (SSE = P2, not shipped) on one port. A future Node orchestrator arrives as a
 second engine behind the same REST surface (engine advertised via `X-Omega-Engine`).
 
 ```

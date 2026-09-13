@@ -1,12 +1,19 @@
-# Plugin system
+# Plugin system (0.3)
 
-Plugins live under `$OMEGA_DATA/plugins/<name>/` with `plugin.json` + `plugin.py`.
+Plugins live under **PluginHome** `$OMEGA_DATA/plugins/<name>/` with `plugin.json` + `plugin.py`.
 Runtime `python` loads in-process and calls `register(PluginAPI)`.
-Runtime `node` is reserved / not executed in 0.2.x.
+Runtime `node` is reserved / not executed yet.
 
 CLI: `omega plugin list|install|info|enable|disable|rm`.
 
-**Trust:** treat installs as code execution. Remote/clone installs should be reviewed.
-Allowlist / stronger isolation is planned for 0.3 (ADR-0004 candidate).
+## Trust (ADR-0004)
+- **Local path** install: allowed; plugin stays enabled.
+- **Remote** `owner/repo` clone: requires `OMEGA_PLUGIN_ALLOW_REMOTE=1` **or** an entry in `$OMEGA_DATA/plugins-allowlist.json` (`owner/repo` or `owner/*`). Remote installs start **disabled** until `omega plugin enable <name>`.
+- Boot kill-switch: `OMEGA_NO_PLUGINS=1`.
+
+Treat enabled plugins as trusted code execution in the gateway process.
 
 Example: `examples/plugins/omega-hello`.
+
+## Not SkillHome
+Skills use `~/.agents/skills` (**SkillHome**) — do not merge with PluginHome.
