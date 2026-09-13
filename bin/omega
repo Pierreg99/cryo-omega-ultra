@@ -1,5 +1,5 @@
-#!/data/data/com.termux/files/usr/bin/python3
-"""omega — CryoOmega ULTRA unified CLI (v0.2.0 OmniLink)."""
+#!/usr/bin/env python3
+"""omega — CryoOmega ULTRA unified CLI (v0.2.1 OmniLink)."""
 import argparse
 import json
 import subprocess
@@ -104,19 +104,29 @@ def cmd_plan(args):
 
 
 def cmd_doctor(args):
-    ok_all = True
-    for name, ok, note in doctor.run():
-        mark = "✔" if ok else "✘"
-        print(f"  {mark} {name:<14} {note}")
-        ok_all = ok_all and ok
-    if client.is_up():
-        s = client.status()
-        print(f"  ✔ gateway        {s.get('engine')} · up {s.get('uptime_s')}s · "
-              f"port {config.GATEWAY_PORT}")
+    checks = doctor.run()
+    hard_fail = False
+    soft_fail = False
+    for name, ok, note, hard in checks:
+        if ok:
+            mark = "✔"
+        elif hard:
+            mark = "✘"
+            hard_fail = True
+        else:
+            mark = "!"
+            soft_fail = True
+        tag = "" if ok or not hard else " [hard]"
+        if not ok and not hard:
+            tag = " [soft]"
+        print(f"  {mark} {name:<14} {note}{tag}")
+    if hard_fail:
+        print("\n Doctor: HARD FAIL (exit 1)")
+        sys.exit(1)
+    if soft_fail:
+        print("\n Doctor: OK with soft warnings")
     else:
-        print("  ✘ gateway        unreachable (run: omega gateway start)")
-        ok_all = False
-    print("\n Doctor:", "ALL GREEN" if ok_all else "issues found (see ✘)")
+        print("\n Doctor: ALL GREEN")
 
 
 def cmd_init(args):

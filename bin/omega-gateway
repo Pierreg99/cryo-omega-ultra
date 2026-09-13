@@ -1,5 +1,5 @@
-#!/data/data/com.termux/files/usr/bin/python3
-"""omega-gateway — CryoOmega ULTRA engine service entrypoint (v0.2.0 OmniLink)."""
+#!/usr/bin/env python3
+"""omega-gateway — CryoOmega ULTRA engine service entrypoint (v0.2.1 OmniLink)."""
 import sys
 from pathlib import Path
 

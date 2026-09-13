@@ -8,7 +8,7 @@
 
 <h1 align="center">CryoOmega ULTRA</h1>
 
-<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.2.0 OmniLink)</strong></p>
+<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.2.1 OmniLink)</strong></p>
 
 A unified command-line tool, interactive TUI, and browser-based IDE workspace for Cryo Omega autonomous agents and skills orchestration. Computation lives in the **`omega-gateway`** engine service; the CLI and the IDE are lightweight clients.
 
@@ -27,7 +27,7 @@ A unified command-line tool, interactive TUI, and browser-based IDE workspace fo
   drawers, Ctrl-K palette
 - **System Doctor** (`omega doctor`); engine control (`omega gateway status|start|stop|restart|log`)
 - **Plugins**: installable extensions adding web routes (`omega plugin list|install|info|enable|disable|rm`; example in `examples/plugins/omega-hello`)
-- **SSE streaming** *(P2)*: real token streaming from the providers
+- **SSE streaming** *(P2, not shipped)*: planned token streaming; `/api/chat` currently returns JSON
 
 ## Structure
 
@@ -78,6 +78,14 @@ Identity extends the Cryo Omega Line (crystalline Ω, orbital nodes) with the ID
 
 The live IDE is `ide/index.html`. Wordmark and version strings live in `assets/og.svg` (code-built) so the product name stays exact.
 
+## Foundation (0.2.1)
+
+- Packaging: `pyproject.toml` (`pip install -e ".[dev]"`), portable shebangs, `.env.example`
+- `omega doctor` exits **1** on hard failures; soft warnings (`providers`, `skills`, `gateway`, …) keep exit 0
+- Gateway binds loopback by default; non-loopback requires `OMEGA_GATEWAY_ALLOW_REMOTE=1`
+- ADRs under `docs/adr/`
+
 ## License
+
 
 MIT License

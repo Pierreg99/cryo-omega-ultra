@@ -3,7 +3,7 @@
 **Date:** 2026-09-11
 **Repo:** https://github.com/Pierreg99/cryo-omega-ultra
 **Branch:** main
-**Status:** Approved by user (brainstorm A23 SafeMode reviewed) — pending P0 implementation
+**Status:** Implemented on main as v0.2.x OmniLink gateway; Foundation Hardening tracked as 0.2.1 (doctor exit, packaging, bind safety). SSE streaming remains P2.
 
 ## Goal
 

@@ -297,7 +297,11 @@ def serve(port=None, host=None):
     """Run the gateway in the foreground."""
     cfg = config.load()
     port = port or cfg.get("port", config.GATEWAY_PORT)
-    host = host or config.GATEWAY_HOST
+    try:
+        host = config.gateway_host(host)
+    except RuntimeError as exc:
+        print(f"✘ {exc}", flush=True)
+        return 2
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     try:
         config.GATEWAY_PID.write_text(str(os.getpid()))
