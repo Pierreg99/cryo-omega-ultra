@@ -12,8 +12,24 @@ GATEWAY_LOG = DATA_DIR / "gateway.log"
 GATEWAY_PID = DATA_DIR / "gateway.pid"
 OMEGA_YAML = Path(os.environ.get("OMEGA_CONFIG", ROOT / ".omega.yaml"))
 
-GATEWAY_HOST = "127.0.0.1"
 GATEWAY_PORT = int(os.environ.get("OMEGA_GATEWAY_PORT", "8787"))
+_LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
+
+
+def gateway_host(explicit=None):
+    """Resolve bind host. Non-loopback requires OMEGA_GATEWAY_ALLOW_REMOTE=1."""
+    host = explicit or os.environ.get("OMEGA_GATEWAY_HOST") or "127.0.0.1"
+    if host not in _LOOPBACK and os.environ.get("OMEGA_GATEWAY_ALLOW_REMOTE") != "1":
+        raise RuntimeError(
+            f"refusing non-loopback gateway bind {host!r}: "
+            "File API (/api/tree|/file) has no auth. "
+            "Set OMEGA_GATEWAY_ALLOW_REMOTE=1 only if you accept that risk."
+        )
+    return host
+
+
+# Back-compat: default loopback (env validated at serve-time via gateway_host).
+GATEWAY_HOST = os.environ.get("OMEGA_GATEWAY_HOST") or "127.0.0.1"
 BAD_ENTRIES = (".git", "node_modules", "__pycache__")
 
 DEFAULTS = {
