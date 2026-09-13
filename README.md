@@ -8,7 +8,7 @@
 
 <h1 align="center">CryoOmega ULTRA</h1>
 
-<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.3.0 OmniLink)</strong></p>
+<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.3.1 OmniLink)</strong></p>
 
 A unified command-line tool, interactive TUI, and browser-based IDE workspace for Cryo Omega autonomous agents and skills orchestration. Computation lives in the **`omega-gateway`** engine service; the CLI and the IDE are lightweight clients.
 

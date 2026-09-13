@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import __version__, agents, config, llm, skills
+from . import __version__, agents, config, llm, observability, skills
 
 REPO = Path(__file__).resolve().parents[2]
 IDE_DIR = REPO / "ide"
@@ -58,14 +58,32 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             pass
 
     # -- helpers ---------------------------------------------------------
+    def _request_id(self):
+        rid = getattr(self, "_omega_rid", None)
+        if rid:
+            return rid
+        rid = observability.new_request_id(self.headers.get("X-Request-Id"))
+        self._omega_rid = rid
+        return rid
+
     def _json(self, body, code=200):
+        rid = self._request_id()
+        if isinstance(body, dict) and "request_id" not in body:
+            body = {**body, "request_id": rid}
         data = json.dumps(body).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("X-Omega-Engine", ENGINE_NAME)
+        self.send_header("X-Request-Id", rid)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+        observability.log_event(
+            config.GATEWAY_LOG, "info",
+            event="response", request_id=rid, path=getattr(self, "path", ""),
+            code=code, bytes=len(data),
+        )
+        observability.record_request(ok=code < 400, request_id=rid)
 
     def _read_body(self):
         try:
@@ -102,6 +120,8 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             "agents": len(agents.list_agents()),
             "providers": {p: bool(config.key_for(p)) for p in config.PROVIDERS},
             "plugins": ACTIVE_PLUGINS,
+            "metrics": observability.snapshot(),
+            "bind": {"host": config.GATEWAY_HOST, "port": config.GATEWAY_PORT},
         })
 
     def _api_tree(self, query):
@@ -160,11 +180,20 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         t0 = time.time()
         res = llm.chat(messages, provider=body.get("provider"),
                        model=body.get("model"))
+        latency = res.latency_ms + int((time.time() - t0) * 1000)
+        rid = self._request_id()
+        observability.record_request(ok=True, latency_ms=latency, kind="chat",
+                                     request_id=rid)
+        observability.log_event(
+            config.GATEWAY_LOG, "info",
+            event="chat", request_id=rid, provider=res.provider,
+            model=res.model, latency_ms=latency,
+        )
         self._json({
             "provider": res.provider,
             "model": res.model,
             "text": res.text,
-            "latency_ms": res.latency_ms + int((time.time() - t0) * 1000),
+            "latency_ms": latency,
         })
 
     def _api_plan(self, body):
@@ -185,7 +214,7 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         segs = [unquote(s) for s in parsed.path.split("/")]
         query = self._get_query(self.path)
 
-        if parsed.path == "/api/status":
+        if parsed.path in ("/api/status", "/api/health", "/healthz"):
             return self._api_status(query)
         if parsed.path.startswith("/api/tree"):
             return self._api_tree(query)

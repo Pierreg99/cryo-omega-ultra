@@ -3,9 +3,8 @@
 Talks to the omega-gateway engine via `client` (auto-spawns when down).
 """
 import json
-import sys
 
-from . import client, config, gateway, skills
+from . import client, gateway, skills
 
 HELP = """CRYOMEGA ULTRA · chat (gateway-backed)
   /help            this panel

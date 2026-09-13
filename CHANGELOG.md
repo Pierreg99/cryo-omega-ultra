@@ -1,6 +1,13 @@
 # Changelog
 
-## [0.3.0] — unreleased
+## [0.3.1] — unreleased
+### Added
+- Structured JSON gateway logs + `X-Request-Id` / `request_id`
+- In-process metrics on status; `/api/health` + `/healthz`
+- IDE a11y (skip link, aria, focus, empty chat state)
+- ADR-0005 observability; incident + release runbooks; ruff CI
+
+## [0.3.0] — 2026-09-13
 ### Added
 - ADR-0004 plugin load trust: remote install allowlist / `OMEGA_PLUGIN_ALLOW_REMOTE`
 - Remote installs disabled until explicit enable
