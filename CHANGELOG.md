@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.3.2] — unreleased
+## [0.4.0] — unreleased
+### Added
+- Working memory JSONL + `/api/memory/*` (ADR-0007)
+- Optional `session_id` on `/api/chat` for durable short-term context
+- Reserved memory namespace dirs (no RAG yet)
+
+## [0.3.2] — 2026-09-13
 ### Added
 - `/api/chat` optional SSE chunking when `Accept: text/event-stream` (ADR-0006)
 - Estimated token usage on chat responses (`usage.estimated=true`)

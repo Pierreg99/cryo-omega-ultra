@@ -41,7 +41,7 @@ def status():
     return _req("GET", "/api/status")
 
 
-def chat(messages, agent=None, model=None, provider=None, timeout=600):
+def chat(messages, agent=None, model=None, provider=None, session_id=None, timeout=600):
     body = {"messages": messages}
     if agent:
         body["agent"] = agent
@@ -49,7 +49,26 @@ def chat(messages, agent=None, model=None, provider=None, timeout=600):
         body["model"] = model
     if provider:
         body["provider"] = provider
+    if session_id:
+        body["session_id"] = session_id
     return _req("POST", "/api/chat", body, timeout)
+
+
+def memory_sessions():
+    return _req("GET", "/api/memory/sessions")
+
+
+def memory_working(session_id, limit=50):
+    return _req("GET", f"/api/memory/working?session_id={session_id}&limit={limit}")
+
+
+def memory_append(session_id, content, role="user", **kw):
+    body = {"session_id": session_id, "content": content, "role": role, **kw}
+    return _req("POST", "/api/memory/working", body)
+
+
+def memory_forget(session_id):
+    return _req("DELETE", f"/api/memory/working?session_id={session_id}")
 
 
 def plan(task):
