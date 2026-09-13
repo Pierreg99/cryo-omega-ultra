@@ -8,7 +8,7 @@
 
 <h1 align="center">CryoOmega ULTRA</h1>
 
-<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.3.1 OmniLink)</strong></p>
+<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.3.2 OmniLink)</strong></p>
 
 A unified command-line tool, interactive TUI, and browser-based IDE workspace for Cryo Omega autonomous agents and skills orchestration. Computation lives in the **`omega-gateway`** engine service; the CLI and the IDE are lightweight clients.
 
@@ -27,7 +27,7 @@ A unified command-line tool, interactive TUI, and browser-based IDE workspace fo
   drawers, Ctrl-K palette
 - **System Doctor** (`omega doctor`); engine control (`omega gateway status|start|stop|restart|log`)
 - **Plugins**: installable extensions adding web routes (`omega plugin list|install|info|enable|disable|rm`; example in `examples/plugins/omega-hello`)
-- **SSE streaming** *(P2, not shipped)*: planned token streaming; `/api/chat` currently returns JSON
+- **SSE chat chunking** *(0.3.2)*: `Accept: text/event-stream` chunks completed replies; provider-native streaming still future
 
 ## Structure
 
