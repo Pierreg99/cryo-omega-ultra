@@ -1,99 +1,162 @@
-<p align="center">
-  <img src="assets/og.svg" alt="CRYOMEGA ULTRA — OMNILINK v0.2.0" width="100%">
-</p>
+# CryoOmega ULTRA
 
-<p align="center">
-  <img src="assets/mark.svg" alt="CryoOmega ULTRA mark" width="96">
-</p>
+**Unified CLI, TUI and Web IDE workspace for agents, skills, plugins and the OmniLink gateway.**
 
-<h1 align="center">CryoOmega ULTRA</h1>
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](pyproject.toml) [![License](https://img.shields.io/badge/license-MIT-111111.svg)](LICENSE) [![CI](https://img.shields.io/github/actions/workflow/status/Pierreg99/cryo-omega-ultra/python.yml?label=CI)](https://github.com/Pierreg99/cryo-omega-ultra/actions)
 
-<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.4.0 OmniLink)</strong></p>
+> Technical project documentation. No marketing claims. Feature status is based on the current repository state.
 
-A unified command-line tool, interactive TUI, and browser-based IDE workspace for Cryo Omega autonomous agents and skills orchestration. Computation lives in the **`omega-gateway`** engine service; the CLI and the IDE are lightweight clients.
+## At a glance
 
-## Features
+CryoOmega ULTRA combines a command-line client, interactive TUI and browser-based Web IDE around the `omega-gateway` runtime. The gateway owns computation; clients communicate with it. The repository is primarily Python, with shell/Windows integration examples and documentation-first operational guidance.
 
-- **Gateway engine**: `omega-gateway` service owns all computation (REST + static IDE);
-  CLI and IDE are clients; data lives in `~/.omega/`
-- **Live LLM in the IDE**: browser chat reaches the real provider failover chain
-  (minimax → anthropic → openai, offline echo fallback) via `POST /api/chat`
-- **Agent registry**: named persona profiles (`~/.omega/agents.json`);
-  `omega agents list|info|run|add|rm`
-- **TUI & Chat** (`omega chat`): gateway-backed, slash commands `/agent /agents /plan /skills /model`
-- **Skills Integration** (`omega skills list|search|add|info`)
-- **Execution Planner** (`omega plan "<task>"`)
-- **Web IDE** (`omega ide` · `omega chat --web`): explorer, editor, chat, skills/agent
-  drawers, Ctrl-K palette
-- **System Doctor** (`omega doctor`); engine control (`omega gateway status|start|stop|restart|log`)
-- **Plugins**: installable extensions adding web routes (`omega plugin list|install|info|enable|disable|rm`; example in `examples/plugins/omega-hello`)
-- **Working memory** *(0.4)*: session JSONL under `~/.omega/memory/working`; optional `session_id` on chat
-- **SSE chat chunking** *(0.3.2)*: `Accept: text/event-stream` chunks completed replies; provider-native streaming still future
+### Animated project demos
 
-## Structure
+![CLI demo](assets/demos/cli-demo.gif)
+![Architecture flow](assets/demos/architecture-flow.gif)
+![Engineering workflow](assets/demos/workflow.gif)
 
-```
-.
-├── assets/               # Spectrum Prime identity (mark, OG)
-├── bin/
-│   ├── omega             # CLI entrypoint (gateway client)
-│   └── omega-gateway     # Engine service (REST + static IDE)
-├── ide/
-│   └── index.html        # Self-contained Web IDE interface
-└── lib/
-    └── ultra/            # Core package (agents, client, config, doctor,
-                          #   gateway, llm, plugins, skills, tui)
-```
-- `examples/plugins/` — installable reference plugins
-- `tools/eval_omnilink.py` — 5-dimension eval harness (A021 gateway)
+The GIFs are lightweight repository-local demonstrations. They are illustrative rather than test evidence.
 
-## Quick Start
+## Feature matrix
+
+| Capability | Status | Primary entry point |
+|---|---|---|
+| CLI | Available | `./bin/omega` |
+| TUI chat | Available | `./bin/omega chat` |
+| Gateway | Available | `./bin/omega gateway ...` |
+| Web IDE | Available | `./bin/omega ide` |
+| Agent registry | Available | `./bin/omega agents ...` |
+| Skills | Available | `./bin/omega skills ...` |
+| Planner | Available | `./bin/omega plan ...` |
+| Plugins | Available | `./bin/omega plugin ...` |
+| Working memory | Available in 0.4 line | `~/.omega/memory/working` |
+| SSE chat chunking | Available | `Accept: text/event-stream` |
+| Structured gateway logs | Available | Gateway status/log output |
+| Health endpoints | Available | `/api/health`, `/healthz` |
+| Browser extension | Repository component | `browser-extension/` |
+| WebMCP | Integration track / documentation | `docs/` |
+| Testkube | Integration track / documentation | `docs/` |
+| GeoAI | Integration track / documentation | `docs/` |
+
+## Supported surfaces
+
+### CLI
 
 ```bash
-# Add bin/ to your PATH or run directly:
-./bin/omega doctor          # local checks + gateway reachability
-
-# Interactive TUI chat (auto-starts the gateway in the background)
+./bin/omega doctor
 ./bin/omega chat
-
-# Launch the Web IDE
 ./bin/omega ide
-
-# Run/monitor the engine directly
+./bin/omega agents list
+./bin/omega skills list
+./bin/omega plan "inspect the gateway"
 ./bin/omega gateway start
 ./bin/omega gateway status
-./bin/omega-gateway         # foreground engine
+./bin/omega gateway log
 ```
 
-## Spectrum Prime
+### Gateway
 
-Identity extends the Cryo Omega Line (crystalline Ω, orbital nodes) with the IDE spectrum:
+The local default is loopback-oriented. Remote binding requires explicit configuration. See [Configuration](docs/configuration.md), [Security](SECURITY.md) and the [Threat Model](docs/security/threat-model.md).
 
-| Token | Hex |
+### Web IDE
+
+The browser IDE is served by the gateway. Use `./bin/omega ide` for the documented local entry point.
+
+## Architecture
+
+```text
+                 +--------------------+
+                 |     CLI / TUI       |
+                 +----------+---------+
+                            |
+                 +----------v---------+
+                 |    omega-gateway    |
+                 | REST + static IDE   |
+                 +----+----+----+-----+
+                      |    |    |
+                    agents skills plugins
+                      |    |    |
+                 +----v----v----v-----+
+                 | providers / runtime |
+                 +---------------------+
+```
+
+Repository layout:
+
+```text
+bin/                    CLI and gateway entrypoints
+lib/ultra/              Core package
+ide/                    Browser IDE
+browser-extension/      Extension sources and packaging
+examples/               Reference integrations and plugins
+tests/                  Automated tests
+tools/                  Evaluation and maintenance utilities
+docs/                   Technical documentation and wiki source
+assets/                 Local project graphics and identity
+.github/workflows/      GitHub Actions
+```
+
+## Installation
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install -e ".[dev]"
+./bin/omega doctor
+```
+
+The package metadata currently declares Python `>=3.9` and MIT licensing. fileciteturn36file10
+
+## Development
+
+```bash
+pytest -q
+./bin/omega doctor
+```
+
+See:
+
+- [Contributing](CONTRIBUTING.md)
+- [Development](docs/development.md)
+- [Testing](docs/testing.md)
+- [GitHub learning roadmap](docs/wiki/github-learning.md)
+- [Project profile](docs/project-profile.md)
+
+## Documentation map
+
+| Need | Document |
 |---|---|
-| void | `#05070d` |
-| cyan | `#00e5ff` |
-| violet | `#7b5cff` |
-| rose | `#ff5c8a` |
-| gold | `#f5c56b` |
+| First run | `docs/wiki/getting-started/` |
+| Concepts | `docs/wiki/architecture/` |
+| CLI/API/config | `docs/wiki/cli-gateway-ide/` |
+| Operations | `docs/wiki/operations/` |
+| Security | `docs/wiki/security/` and `SECURITY.md` |
+| Plugins | `docs/wiki/plugins/` |
+| Releases | `docs/wiki/releases/` and `CHANGELOG.md` |
+| Governance | `docs/wiki/documentation-governance.md` |
+| File-type guide | `docs/file-types.md` |
+| License/assets | `docs/license-and-assets.md` |
 
-The live IDE is `ide/index.html`. Wordmark and version strings live in `assets/og.svg` (code-built) so the product name stays exact.
+## Version and changelog
 
+Current package line: **0.4.0**. Release history and migration notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) and `docs/wiki/releases/`.
 
-## Documentation
-- [Architecture](docs/architecture.md) · [Development](docs/development.md) · [Configuration](docs/configuration.md)
-- [API](docs/api.md) · [Plugins](docs/plugin-system.md) · [Testing](docs/testing.md) · [Operations](docs/operations.md)
-- [SECURITY](SECURITY.md) · [Threat model](docs/security/threat-model.md) · [Changelog](CHANGELOG.md)
-- ADRs: `docs/adr/` · Runbooks: `docs/runbooks/`
+## Security boundary
 
-## Foundation (0.2.1)
-
-- Packaging: `pyproject.toml` (`pip install -e ".[dev]"`), portable shebangs, `.env.example`
-- `omega doctor` exits **1** on hard failures; soft warnings (`providers`, `skills`, `gateway`, …) keep exit 0
-- Gateway binds loopback by default; non-loopback requires `OMEGA_GATEWAY_ALLOW_REMOTE=1`
-- ADRs under `docs/adr/` (incl. 0004 plugin trust)
+Do not publish the local gateway remotely without deliberate configuration and appropriate authentication/network controls. API keys belong in environment variables or an external secret store, never in tracked files. Plugins execute in-process and therefore require explicit trust.
 
 ## License
 
+CryoOmega ULTRA is licensed under the MIT License. The canonical legal text is in [`LICENSE`](LICENSE). Asset attribution and documentation rules are in [`docs/license-and-assets.md`](docs/license-and-assets.md).
 
-MIT License
+## Languages and file types
+
+The runtime is Python-first. The repository also contains JavaScript/HTML/CSS for the Web IDE and extension, Markdown documentation, shell-oriented entrypoints, and reference Java/Windows integration files. See [`docs/file-types.md`](docs/file-types.md) for the complete repository convention.
+
+## Links
+
+- Repository: https://github.com/Pierreg99/cryo-omega-ultra
+- Issues: https://github.com/Pierreg99/cryo-omega-ultra/issues
+- Actions: https://github.com/Pierreg99/cryo-omega-ultra/actions
+- Wiki: https://github.com/Pierreg99/cryo-omega-ultra/wiki

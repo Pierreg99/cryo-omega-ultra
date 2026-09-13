@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased] — documentation and repository presentation upgrade
+### Added
+- Bilingual project profile and file-type documentation (English/German)
+- Repository-local animated GIF demonstrations for CLI, architecture and engineering workflow
+- Java 11 interoperability reference example
+- POSIX shell and Windows CMD smoke-check wrappers
+- License and asset governance documentation
+- Expanded README feature matrix, documentation map, development and security guidance
+
+### Documentation
+- README now separates shipped capabilities from integration tracks.
+- Added explicit source-of-truth and file-type conventions.
+- Added German companion README at `README.de.md`.
+
 ## [0.4.0] — unreleased
 ### Added
 - Working memory JSONL + `/api/memory/*` (ADR-0007)

@@ -1,106 +1,55 @@
-# GitHub Learning & Engineering Roadmap
+# CryoOmega ULTRA Wiki
 
-This page defines the practical learning path for maintaining CryoOmega ULTRA as a disciplined GitHub engineering project.
+Technical documentation for CryoOmega ULTRA as Docs as Code.
 
-## Goals
+## Start here
 
-- Learn GitHub through the real repository rather than isolated exercises.
-- Make repository structure, review, CI, security, releases, and agent workflows reproducible.
-- Keep documentation technical and source-oriented.
+- [Project Overview](overview.md)
+- [Getting Started](getting-started/index.md)
+- [Architecture & Design](architecture/index.md)
+- [CLI, Gateway & IDE](cli-gateway-ide/index.md)
+- [Operations & Runbooks](operations/index.md)
+- [Security & Threat Model](security/index.md)
+- [Plugins & Extensions](plugins/index.md)
+- [Development & Contribution](development/index.md)
+- [Releases & Changelog](releases/index.md)
+- [GitHub Learning Roadmap](github-learning.md)
+- [Project Profile](../project-profile.md)
+- [File Types](../file-types.md)
+- [License & Assets](../license-and-assets.md)
 
-## Current repository baseline
+## Existing source documents
 
-CryoOmega ULTRA is a public Python repository with CLI, TUI, and Web IDE components. Issues, Projects, Wiki, Pull Requests, and Discussions are enabled. GitHub Pages is not currently enabled.
+- [Repository README](../../README.md)
+- [German README](../../README.de.md)
+- [Architecture](../architecture.md)
+- [Configuration](../configuration.md)
+- [API](../api.md)
+- [Operations](../operations.md)
+- [Testing](../testing.md)
+- [Plugin system](../plugin-system.md)
+- [Security Policy](../../SECURITY.md)
+- [Changelog](../../CHANGELOG.md)
+- [Extension Changelog](../../CHANGELOG_EXTENSION.md)
+- [ADRs](../adr/)
+- [Runbooks](../runbooks/)
 
-## Learning levels
+## Documentation model
 
-### Level 1 — Git and GitHub Core
+| Type | Question | Location |
+|---|---|---|
+| Quickstart | How do I get running quickly? | `getting-started/` |
+| Tutorial | How do I complete a use case? | `tutorials/` |
+| How-to | How do I solve a concrete task? | `how-to/` |
+| Reference | What commands, APIs or settings exist? | `cli-gateway-ide/` and `reference/` |
+| Concept | Why is the system designed this way? | `architecture/` |
+| Runbook | What exact operational steps should I execute? | `operations/runbooks/` |
+| ADR | Why was a design decision made? | `architecture/adrs/` |
 
-Learn branches, commits, tags, issues, pull requests, reviews, Projects, milestones, releases, and artifacts.
+## Repository presentation assets
 
-Practice flow:
+Animated GIF demonstrations are under `assets/demos/`. They illustrate interface and workflow concepts; they are not telemetry or verification artifacts.
 
-```text
-issue → branch → commit → pull request → CI → review → merge → release
-```
+## Navigation rule
 
-### Level 2 — Repository Engineering
-
-Learn repository layout, contribution rules, CODEOWNERS, issue templates, PR templates, documentation navigation, and conventions.
-
-Recommended targets:
-
-- `AGENTS.md`
-- `.github/copilot-instructions.md`
-- `.github/instructions/`
-- `.github/ISSUE_TEMPLATE/`
-- `.github/PULL_REQUEST_TEMPLATE.md`
-- `CODEOWNERS`
-
-### Level 3 — CI and Testing
-
-Learn GitHub Actions workflow structure, job boundaries, permissions, caching, matrices, artifacts, test reporting, and reusable workflows.
-
-Minimum pipeline:
-
-```text
-lint → syntax/type checks → unit tests → integration checks → artifacts
-```
-
-### Level 4 — Security and Supply Chain
-
-Learn least-privilege `GITHUB_TOKEN` permissions, dependency review, action pinning policy, secret handling, CODEOWNERS protection for workflow files, and deployment environments.
-
-### Level 5 — Agent Engineering
-
-Learn the difference between persistent repository instructions and task-specific skills. Use skills for bounded workflows and `AGENTS.md` / instruction files for durable repository context.
-
-### Level 6 — Advanced Automation
-
-Progressively evaluate agentic workflows, Testkube, WebMCP, GeoAI, automated documentation checks, and release intelligence.
-
-## Practical milestones
-
-| Milestone | Evidence |
-|---|---|
-| Git Core | feature branch with reviewable commits |
-| PR Engineering | complete PR with tests and docs |
-| CI | green workflow on push and pull request |
-| Security | permissions and dependency baseline documented |
-| Documentation | changed behavior has linked documentation |
-| Releases | reproducible tagged release with notes |
-| Agent Context | repository and path-specific agent instructions |
-| Skill Engineering | positive and negative trigger evaluations |
-| WebMCP | registered tool with explicit side-effect semantics |
-| Testkube | reproducible Kubernetes TestWorkflow |
-| GeoAI | CRS/validity/spatial-validation report |
-
-## CryoOmega target operating model
-
-```text
-Code + Tests + Docs + Security + Governance + Agents + Automation + Releases
-                               ↓
-                    Engineering Platform
-```
-
-## Priority
-
-### P0 — Foundation
-
-Repository governance, README/CONTRIBUTING alignment, agent context, baseline CI, testing, security, and release conventions.
-
-### P1 — Engineering maturity
-
-CODEOWNERS, path-specific instructions, Dependabot, advanced CI, artifacts, release automation, and Projects discipline.
-
-### P2 — Agent and platform integration
-
-Agentic workflows, WebMCP, Testkube, GeoAI, and AI/ML integration.
-
-### P3 — Advanced autonomy
-
-Multi-agent workflows, repository intelligence, automated documentation maintenance, and cross-repository orchestration.
-
-## Study method
-
-Every learning topic should produce a repository artifact: a document, test, workflow, issue, PR, or release. Avoid learning paths that do not leave an inspectable result.
+Start from the task, not from the repository tree. Use Overview for orientation, Getting Started for first execution, Architecture for internals, Operations for runtime procedures, and Security for trust-boundary questions.
