@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import __version__, agents, config, llm, observability, skills
+from . import __version__, agents, config, llm, memory, observability, skills
 
 REPO = Path(__file__).resolve().parents[2]
 IDE_DIR = REPO / "ide"
@@ -150,6 +150,7 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             "providers": {p: bool(config.key_for(p)) for p in config.PROVIDERS},
             "plugins": ACTIVE_PLUGINS,
             "metrics": observability.snapshot(),
+            "memory": {"working_sessions": len(memory.list_sessions())},
             "bind": {"host": config.GATEWAY_HOST, "port": config.GATEWAY_PORT},
         })
 
@@ -201,6 +202,14 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         if not isinstance(messages, list) or not messages:
             self._json({"error": "messages required"}, 400)
             return
+        session_id = (body.get("session_id") or "").strip()
+        if session_id:
+            try:
+                prior = memory.messages_for_chat(session_id, limit=20)
+            except ValueError as exc:
+                self._json({"error": str(exc)}, 400)
+                return
+            messages = prior + messages
         agent_name = body.get("agent")
         if agent_name:
             persona = (agents.find_agent(agent_name) or {}).get("persona", "")
@@ -229,12 +238,28 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             prompt_tokens=usage["prompt_tokens"],
             completion_tokens=usage["completion_tokens"],
         )
+        if session_id:
+            # persist last user message + assistant reply
+            user_msgs = [m for m in (body.get("messages") or [])
+                         if m.get("role") == "user"]
+            if user_msgs:
+                memory.append_turn(
+                    session_id, role="user",
+                    content=user_msgs[-1].get("content") or "",
+                    source="chat", request_id=rid,
+                )
+            memory.append_turn(
+                session_id, role="assistant", content=res.text or "",
+                source="chat", request_id=rid,
+                meta={"provider": res.provider, "model": res.model},
+            )
         payload = {
             "provider": res.provider,
             "model": res.model,
             "text": res.text,
             "latency_ms": latency,
             "usage": usage,
+            "session_id": session_id or None,
         }
         if self._wants_sse():
             # Provider-native token streaming remains future work; we SSE-chunk
@@ -273,6 +298,11 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
 
         if parsed.path in ("/api/status", "/api/health", "/healthz"):
             return self._api_status(query)
+        if parsed.path == "/api/memory/sessions":
+            memory.ensure_layout()
+            return self._json({"sessions": memory.list_sessions()})
+        if parsed.path.startswith("/api/memory/working"):
+            return self._api_memory_working_get(query)
         if parsed.path.startswith("/api/tree"):
             return self._api_tree(query)
         if parsed.path.startswith("/api/file"):
@@ -306,6 +336,8 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
 
         if parsed.path == "/api/chat":
             return self._api_chat(body)
+        if parsed.path == "/api/memory/working":
+            return self._api_memory_working_post(body)
         if parsed.path == "/api/plan":
             return self._api_plan(body)
         if parsed.path == "/api/agents/run":
@@ -364,6 +396,8 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         parsed = urlparse(self.path)
+        if parsed.path.startswith("/api/memory/working"):
+            return self._api_memory_working_delete(self._get_query(self.path))
         segs = [unquote(s) for s in parsed.path.split("/")]
         if parsed.path.startswith("/api/agents/") and len(segs) >= 4:
             removed = agents.remove_agent(segs[3])
@@ -389,6 +423,7 @@ def serve(port=None, host=None):
         print(f"✘ {exc}", flush=True)
         return 2
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    memory.ensure_layout()
     try:
         config.GATEWAY_PID.write_text(str(os.getpid()))
     except OSError:
