@@ -8,7 +8,7 @@
 
 <h1 align="center">CryoOmega ULTRA</h1>
 
-<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.2.1 OmniLink)</strong></p>
+<p align="center"><strong>CryoOmega ULTRA unified CLI, TUI, and Web IDE (v0.2.2 OmniLink)</strong></p>
 
 A unified command-line tool, interactive TUI, and browser-based IDE workspace for Cryo Omega autonomous agents and skills orchestration. Computation lives in the **`omega-gateway`** engine service; the CLI and the IDE are lightweight clients.
 
@@ -77,6 +77,13 @@ Identity extends the Cryo Omega Line (crystalline Ω, orbital nodes) with the ID
 | gold | `#f5c56b` |
 
 The live IDE is `ide/index.html`. Wordmark and version strings live in `assets/og.svg` (code-built) so the product name stays exact.
+
+
+## Documentation
+- [Architecture](docs/architecture.md) · [Development](docs/development.md) · [Configuration](docs/configuration.md)
+- [API](docs/api.md) · [Plugins](docs/plugin-system.md) · [Testing](docs/testing.md) · [Operations](docs/operations.md)
+- [SECURITY](SECURITY.md) · [Threat model](docs/security/threat-model.md) · [Changelog](CHANGELOG.md)
+- ADRs: `docs/adr/` · Runbooks: `docs/runbooks/`
 
 ## Foundation (0.2.1)
 
