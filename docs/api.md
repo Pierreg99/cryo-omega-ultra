@@ -5,7 +5,7 @@ Base: `http://127.0.0.1:8787` (default). Header `X-Omega-Engine: python-gateway`
 ## GET
 | Path | Purpose |
 |------|---------|
-| `/api/status` | version, engine, uptime, root |
+| `/api/status` · `/api/health` · `/healthz` | version, engine, uptime, metrics, bind |
 | `/api/skills` | list/search skills |
 | `/api/agents` | list agents |
 | `/api/agents/<name>` | agent info |
@@ -30,3 +30,6 @@ Base: `http://127.0.0.1:8787` (default). Header `X-Omega-Engine: python-gateway`
 | `/api/plugins/<name>` | remove |
 
 Static IDE is served from the same origin as the API.
+
+## Correlation
+Clients may send `X-Request-Id`; responses echo it and include `request_id` in JSON bodies.

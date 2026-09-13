@@ -1,5 +1,4 @@
 """Skills engine — skills.sh-compatible install + local cryo-omega registry."""
-import json
 import re
 import shutil
 import subprocess

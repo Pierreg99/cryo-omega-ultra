@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cryo-omega-ultra"
-version = "0.2.1"
+version = "0.3.1"
 description = "CryoOmega ULTRA — unified CLI, TUI and Web IDE (OmniLink gateway)"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -13,7 +13,7 @@ authors = [{ name = "Pierreg99" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "ruff>=0.6"]
 
 [tool.setuptools.packages.find]
 where = ["lib"]
@@ -22,3 +22,13 @@ include = ["ultra*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["lib"]
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["browser-extension", "bundle", "ide"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]

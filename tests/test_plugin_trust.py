@@ -1,9 +1,7 @@
 """Plugin remote install trust (ADR-0004)."""
 import json
-from pathlib import Path
 
 import pytest
-
 from ultra import config, plugins
 
 

@@ -84,50 +84,58 @@ main{display:grid;grid-template-columns:250px 1fr 360px;gap:8px;min-height:0}
 @keyframes p{50%{opacity:.4}}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(123,92,255,.3);border-radius:4px}
 @media(max-width:900px){main{grid-template-columns:1fr}#tree-panel,#agent-panel{display:none}}
+.skip-link{position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden}
+.skip-link:focus{left:12px;top:12px;width:auto;height:auto;padding:8px 12px;z-index:100;
+  background:var(--nx-spektrum-2);color:#05070d;border-radius:8px}
+.btn:focus-visible,#chatin:focus-visible,#palette-in:focus-visible,#editor:focus-visible{
+  outline:2px solid var(--nx-spektrum-2);outline-offset:2px}
+#palette .item[aria-selected="true"],#palette .item:focus{background:rgba(123,92,255,.22);color:var(--nx-ink);outline:none}
+#chat-empty{color:var(--nx-dim);font-size:12px;padding:12px;text-align:center}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#chatin">Skip to agent console</a>
 <div id="app">
-  <header class="glass">
-    <span class="pulse"></span>
-    <img class="brand-mark" src="mark.svg" width="22" height="22" alt="">
-    <span class="logo">CRYOMEGA&nbsp;ULTRA <small>OMNILINK v0.2.0</small></span>
+  <header class="glass" role="banner">
+    <span class="pulse" aria-hidden="true"></span>
+    <img class="brand-mark" src="mark.svg" width="22" height="22" alt="CryoOmega mark">
+    <span class="logo">CRYOMEGA&nbsp;ULTRA <small>OMNILINK v0.3.1</small></span>
     <div class="spacer"></div>
-    <button class="btn" onclick="openPalette()">⌘K palette</button>
-    <button class="btn" onclick="toggleSkills()">◈ skills</button>
-    <button class="btn" onclick="omega('doctor')">doctor</button>
+    <button type="button" class="btn" onclick="openPalette()" aria-haspopup="dialog" aria-controls="palette">⌘K palette</button>
+    <button type="button" class="btn" onclick="toggleSkills()" aria-controls="skills-drawer">Skills</button>
+    <button type="button" class="btn" onclick="omega('doctor')">Doctor</button>
   </header>
   <main>
-    <section class="glass panel" id="tree-panel">
+    <section class="glass panel" id="tree-panel" aria-label="File explorer">
       <h2>Spectrum Explorer</h2>
-      <div id="tree"></div>
+      <div id="tree" role="tree"></div>
     </section>
-    <section class="glass panel">
+    <section class="glass panel" aria-label="Editor">
       <div id="editor-wrap">
-        <div id="tabs"></div>
-        <textarea id="editor" spellcheck="false" placeholder="⟦ open a file from the Spectrum Explorer ⟧"></textarea>
-        <div id="term" class="glass"><span class="p">ω›</span> CRYOMEGA ULTRA terminal block — ready</div>
+        <div id="tabs" role="tablist" aria-label="Open files"></div>
+        <textarea id="editor" spellcheck="false" placeholder="⟦ open a file from the Spectrum Explorer ⟧" aria-label="Code editor"></textarea>
+        <div id="term" class="glass" role="log" aria-live="polite"><span class="p">ω›</span> CRYOMEGA ULTRA terminal block — ready</div>
       </div>
     </section>
-    <section class="glass panel" id="agent-panel">
-      <h2>Agent Console · minimax-m3</h2>
-      <div id="chat"></div>
+    <section class="glass panel" id="agent-panel" aria-label="Agent console">
+      <h2>Agent Console</h2>
+      <div id="chat" role="log" aria-live="polite" aria-relevant="additions"><div id="chat-empty">No messages yet. Type below or open ⌘K.</div></div>
       <div id="chatbar">
-        <input id="chatin" placeholder="chat · /agent · /plan · /skills …" autofocus>
-        <button class="btn" onclick="send()">▲</button>
+        <input id="chatin" placeholder="chat · /agent · /plan · /skills …" autofocus aria-label="Chat message">
+        <button type="button" class="btn" onclick="send()" aria-label="Send message">Send</button>
       </div>
     </section>
   </main>
 </div>
 
-<div id="palette">
+<div id="palette" role="dialog" aria-modal="true" aria-label="Command palette" hidden>
   <div id="palette-box" class="glass">
-    <input id="palette-in" placeholder="Type a command… (open, chat, skills, agent, plan, doctor)">
-    <div id="palette-list"></div>
+    <input id="palette-in" placeholder="Type a command… (open, chat, skills, agent, plan, doctor)" aria-label="Palette filter">
+    <div id="palette-list" role="listbox" aria-label="Commands"></div>
   </div>
 </div>
 
-<aside id="skills-drawer" class="glass">
+<aside id="skills-drawer" class="glass" aria-label="Skills registry">
   <h2 style="padding:10px 12px 6px;color:var(--nx-dim);font-size:10px;letter-spacing:.2em">CRYO SKILLS REGISTRY</h2>
   <div id="skills-list" style="overflow:auto;flex:1;padding:0 6px 12px"></div>
 </aside>
@@ -143,7 +151,8 @@ async function status(){
       `${s.agents} agents · ${(s.plugins||[]).length} plugins · providers ` +
       Object.entries(s.providers).map(([p,k])=>p[0]+(k?'✓':'·')).join(' '));
 }
-function sys(t){ const d=document.createElement('div'); d.className='msg sys'; d.textContent=t;
+function sys(t){ const empty=$('#chat-empty'); if(empty) empty.remove();
+  const d=document.createElement('div'); d.className='msg sys'; d.textContent=t;
   $('#chat').appendChild(d); $('#chat').scrollTop=1e9; }
 
 async function loadTree(path='.', depth=0){
@@ -264,18 +273,29 @@ const COMMANDS=[
   ['agents registry','listAgents()'],['plugins','pluginsInfo()'],
   ['new chat','newChat()'],
   ['doctor','omega("doctor")'],['status','status()']];
-function openPalette(){ $('#palette').classList.add('open'); $('#palette-in').value=''; renderPal('');
-  $('#palette-in').focus(); }
-function renderPal(q){ $('#palette-list').innerHTML='';
-  COMMANDS.filter(c=>c[0].toLowerCase().includes(q)).forEach(c=>{
-    const d=document.createElement('div'); d.className='item'; d.textContent=c[0];
-    d.onclick=()=>{ eval(c[1]); closePalette(); }; $('#palette-list').appendChild(d); }); }
-function closePalette(){ $('#palette').classList.remove('open'); }
+function openPalette(){
+  const el=$('#palette'); el.classList.add('open'); el.hidden=false;
+  $('#palette-in').value=''; renderPal(''); $('#palette-in').focus();
+}
+function closePalette(){
+  const el=$('#palette'); el.classList.remove('open'); el.hidden=true;
+}
+function renderPal(q){
+  $('#palette-list').innerHTML='';
+  COMMANDS.filter(c=>!q||c[0].toLowerCase().includes(q)).forEach(c=>{
+    const d=document.createElement('div');
+    d.className='item'; d.setAttribute('role','option'); d.tabIndex=0; d.textContent=c[0];
+    const run=()=>{ eval(c[1]); closePalette(); };
+    d.onclick=run;
+    d.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); run(); } };
+    $('#palette-list').appendChild(d);
+  });
+}
 function omega(cmd){ sys(`ω ${cmd} → run in CLI: omega ${cmd}`); }
 
 $('#palette-in').addEventListener('input',e=>renderPal(e.target.value.toLowerCase()));
 document.addEventListener('keydown',e=>{
-  if((e.metaKey||e.ctrlKey)&&e.key==='k'){ e.preventDefault(); openPalette(); }
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette(); }
   if(e.key==='Escape'){ closePalette(); $('#skills-drawer').classList.remove('open'); }
 });
 $('#chatin').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });

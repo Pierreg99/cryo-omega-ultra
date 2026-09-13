@@ -1,8 +1,6 @@
 """Gateway bind safety."""
-import os
 
 import pytest
-
 from ultra import config
 
 
