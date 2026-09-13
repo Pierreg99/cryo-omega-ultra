@@ -85,6 +85,35 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         )
         observability.record_request(ok=code < 400, request_id=rid)
 
+    def _wants_sse(self):
+        accept = (self.headers.get("Accept") or "").lower()
+        return "text/event-stream" in accept
+
+    def _sse(self, events, code=200):
+        """Minimal SSE writer. events: iterable of (event, data_dict|str)."""
+        rid = self._request_id()
+        self.send_response(code)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Omega-Engine", ENGINE_NAME)
+        self.send_header("X-Request-Id", rid)
+        self.end_headers()
+        for ev, data in events:
+            if isinstance(data, dict):
+                if "request_id" not in data:
+                    data = {**data, "request_id": rid}
+                payload = json.dumps(data, ensure_ascii=False)
+            else:
+                payload = str(data)
+            chunk = f"event: {ev}\ndata: {payload}\n\n".encode()
+            self.wfile.write(chunk)
+            self.wfile.flush()
+        observability.log_event(
+            config.GATEWAY_LOG, "info",
+            event="sse_done", request_id=rid, path=getattr(self, "path", ""),
+        )
+        observability.record_request(ok=True, request_id=rid)
+
     def _read_body(self):
         try:
             length = int(self.headers.get("Content-Length") or 0)
@@ -182,19 +211,47 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
                        model=body.get("model"))
         latency = res.latency_ms + int((time.time() - t0) * 1000)
         rid = self._request_id()
+        usage = {
+            "prompt_tokens": getattr(res, "prompt_tokens", 0),
+            "completion_tokens": getattr(res, "completion_tokens", 0),
+            "total_tokens": (
+                getattr(res, "prompt_tokens", 0)
+                + getattr(res, "completion_tokens", 0)
+            ),
+            "estimated": True,
+        }
         observability.record_request(ok=True, latency_ms=latency, kind="chat",
                                      request_id=rid)
         observability.log_event(
             config.GATEWAY_LOG, "info",
             event="chat", request_id=rid, provider=res.provider,
             model=res.model, latency_ms=latency,
+            prompt_tokens=usage["prompt_tokens"],
+            completion_tokens=usage["completion_tokens"],
         )
-        self._json({
+        payload = {
             "provider": res.provider,
             "model": res.model,
             "text": res.text,
             "latency_ms": latency,
-        })
+            "usage": usage,
+        }
+        if self._wants_sse():
+            # Provider-native token streaming remains future work; we SSE-chunk
+            # the completed reply for progressive IDE rendering.
+            text = res.text or ""
+            size = 48
+            chunks = [text[i:i + size] for i in range(0, max(len(text), 1), size)] or [""]
+
+            def events():
+                yield ("meta", {"provider": res.provider, "model": res.model,
+                                "usage": usage, "latency_ms": latency})
+                for ch in chunks:
+                    yield ("token", {"text": ch})
+                yield ("done", payload)
+
+            return self._sse(events())
+        self._json(payload)
 
     def _api_plan(self, body):
         task = (body.get("task") or "").strip()

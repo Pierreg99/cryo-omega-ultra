@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.3.1] — unreleased
+## [0.3.2] — unreleased
+### Added
+- `/api/chat` optional SSE chunking when `Accept: text/event-stream` (ADR-0006)
+- Estimated token usage on chat responses (`usage.estimated=true`)
+- `docs/memory-model.md` (explicitly deferred), CONTRIBUTING, Dockerfile
+
+## [0.3.1] — 2026-09-13
 ### Added
 - Structured JSON gateway logs + `X-Request-Id` / `request_id`
 - In-process metrics on status; `/api/health` + `/healthz`

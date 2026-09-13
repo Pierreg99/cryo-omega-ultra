@@ -6,12 +6,21 @@ import urllib.request
 from . import config
 
 
+def estimate_tokens(*parts: str) -> int:
+    """Rough local estimate (~4 chars/token). Not a billable meter."""
+    n = sum(len(p or "") for p in parts)
+    return max(1, n // 4) if n else 0
+
+
 class LLMResult:
-    def __init__(self, text, provider="offline", model="echo", latency_ms=0):
+    def __init__(self, text, provider="offline", model="echo", latency_ms=0,
+                 prompt_tokens=0, completion_tokens=0):
         self.text = text
         self.provider = provider
         self.model = model
         self.latency_ms = latency_ms
+        self.prompt_tokens = prompt_tokens
+        self.completion_tokens = completion_tokens
 
     def __str__(self):
         return self.text
@@ -50,7 +59,12 @@ def chat(messages, provider=None, model=None, stream=False):
         payload = {"model": use_model, "messages": messages, "stream": False}
         try:
             text = _post(url, key, payload, use_model, name)
-            return LLMResult(text, name, use_model)
+            prompt = "".join(m.get("content", "") for m in messages)
+            return LLMResult(
+                text, name, use_model,
+                prompt_tokens=estimate_tokens(prompt),
+                completion_tokens=estimate_tokens(text),
+            )
         except (urllib.error.URLError, urllib.error.HTTPError, KeyError, OSError):
             continue
     last = messages[-1]["content"] if messages else ""
@@ -61,7 +75,12 @@ def chat(messages, provider=None, model=None, stream=False):
             f"‣ you: {last}\n"
             "‣ run `omega doctor` to wire minimax-m3."
         )
-        return LLMResult(echo)
+        prompt = "".join(m.get("content", "") for m in messages)
+        return LLMResult(
+            echo,
+            prompt_tokens=estimate_tokens(prompt),
+            completion_tokens=estimate_tokens(echo),
+        )
     raise RuntimeError("no provider available and offline echo disabled")
 
 

@@ -33,3 +33,8 @@ Static IDE is served from the same origin as the API.
 
 ## Correlation
 Clients may send `X-Request-Id`; responses echo it and include `request_id` in JSON bodies.
+
+## Chat SSE
+Send `Accept: text/event-stream` to `POST /api/chat`. Events: `meta`, `token`, `done`.
+This chunks the **completed** reply for progressive UI; provider-native streaming is still future work.
+JSON responses include `usage: {prompt_tokens, completion_tokens, total_tokens, estimated: true}`.
