@@ -10,7 +10,6 @@ Does not invent Wiki pages beyond Home. Never syncs Wiki → repo.
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import subprocess
@@ -84,7 +83,7 @@ def main() -> int:
 
     print("Sync policy: repository → GitHub Wiki only")
     print(f"SoT: {INDEX.relative_to(REPO)}")
-    print(f"Target: Wiki Home.md")
+    print("Target: Wiki Home.md")
     for n in notes:
         print(f"  rewrite: {n}")
 
