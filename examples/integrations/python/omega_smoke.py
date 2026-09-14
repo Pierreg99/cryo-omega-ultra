@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Minimal local smoke check for the CryoOmega CLI."""
 from __future__ import annotations
+
 import subprocess
 from pathlib import Path
 
