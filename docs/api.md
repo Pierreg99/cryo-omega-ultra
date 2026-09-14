@@ -48,3 +48,11 @@ JSON responses include `usage: {prompt_tokens, completion_tokens, total_tokens, 
 | DELETE | `/api/memory/working?session_id=` | forget session |
 
 `POST /api/chat` accepts optional `session_id` to prepend prior working turns and persist the exchange.
+
+## Semantic RAG (lexical)
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/memory/semantic/ingest` | ingest `{text}` or `{path}` under OMEGA_ROOT |
+| GET | `/api/memory/semantic/search?q=` | TF-cosine chunk search |
+| GET | `/api/memory/semantic/docs` | list docs |
+| DELETE | `/api/memory/semantic/docs/<id>` | delete doc + chunks |

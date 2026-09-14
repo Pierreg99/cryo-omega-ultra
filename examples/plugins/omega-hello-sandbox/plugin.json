@@ -1,0 +1,8 @@
+{
+  "name": "omega-hello-sandbox",
+  "description": "Sandbox example: GET /api/hello-sandbox via subprocess handle().",
+  "version": "1.0.0",
+  "runtime": "python",
+  "trust": "sandbox",
+  "sandbox_routes": [["GET", "/api/hello-sandbox"]]
+}

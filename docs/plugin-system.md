@@ -17,3 +17,12 @@ Example: `examples/plugins/omega-hello`.
 
 ## Not SkillHome
 Skills use `~/.agents/skills` (**SkillHome**) — do not merge with PluginHome.
+
+
+## Trust levels (0.4.1 / ADR-0009)
+| trust | Behavior |
+|-------|----------|
+| `inprocess` | `register(api)` in gateway process (full trust) |
+| `sandbox` | `sandbox_routes` + `handle(event)` in subprocess per request |
+
+Remote clones write `trust.json` with `sandbox`. Bundled examples may set `inprocess`.
