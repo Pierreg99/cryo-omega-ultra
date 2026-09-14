@@ -174,12 +174,14 @@ def _load_chunks() -> list[dict]:
 def _cosine(a: Counter, b: Counter) -> float:
     if not a or not b:
         return 0.0
-    keys = set(a) | set(b)
-    dot = sum(a.get(k, 0) * b.get(k, 0) for k in keys)
+    # Optimization: iterate over the smaller dict for dot product
+    if len(a) > len(b):
+        a, b = b, a
+    dot = sum(a[k] * b.get(k, 0) for k in a)
+    if dot == 0:
+        return 0.0
     na = math.sqrt(sum(v * v for v in a.values()))
     nb = math.sqrt(sum(v * v for v in b.values()))
-    if na == 0 or nb == 0:
-        return 0.0
     return dot / (na * nb)
 
 
