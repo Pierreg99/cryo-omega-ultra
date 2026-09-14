@@ -14,6 +14,12 @@
 - Added explicit source-of-truth and file-type conventions.
 - Added German companion README at `README.de.md`.
 
+## [0.4.1] — unreleased
+### Added
+- Semantic lexical RAG ingest/search (ADR-0008)
+- Plugin sandbox trust + subprocess `handle()` (ADR-0009)
+- Example `omega-hello-sandbox`
+
 ## [0.4.0] — unreleased
 ### Added
 - Working memory JSONL + `/api/memory/*` (ADR-0007)

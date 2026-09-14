@@ -125,3 +125,22 @@ def plugin_enable(name, enabled=True):
 
 def plugin_remove(name):
     return _req("DELETE", f"/api/plugins/{name}")
+
+def semantic_ingest(text=None, path=None, **kw):
+    body = {**kw}
+    if text is not None:
+        body["text"] = text
+    if path is not None:
+        body["path"] = path
+    return _req("POST", "/api/memory/semantic/ingest", body)
+
+
+def semantic_search(q, limit=5, doc_id=None):
+    qs = f"?q={q}&limit={limit}"
+    if doc_id:
+        qs += f"&doc_id={doc_id}"
+    return _req("GET", "/api/memory/semantic/search" + qs)
+
+
+def semantic_docs():
+    return _req("GET", "/api/memory/semantic/docs")

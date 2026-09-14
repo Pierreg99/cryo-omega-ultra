@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import __version__, agents, config, llm, memory, observability, skills
+from . import __version__, agents, config, llm, memory, observability, semantic, skills
 
 REPO = Path(__file__).resolve().parents[2]
 IDE_DIR = REPO / "ide"
@@ -150,7 +150,10 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             "providers": {p: bool(config.key_for(p)) for p in config.PROVIDERS},
             "plugins": ACTIVE_PLUGINS,
             "metrics": observability.snapshot(),
-            "memory": {"working_sessions": len(memory.list_sessions())},
+            "memory": {
+                "working_sessions": len(memory.list_sessions()),
+                "semantic_docs": len(semantic.list_docs()),
+            },
             "bind": {"host": config.GATEWAY_HOST, "port": config.GATEWAY_PORT},
         })
 
@@ -278,6 +281,58 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             return self._sse(events())
         self._json(payload)
 
+
+    def _api_semantic_ingest(self, body):
+        text = body.get("text")
+        path = body.get("path")
+        try:
+            if path:
+                root = Path(config.ROOT).resolve()
+                target = (root / str(path)).resolve()
+                try:
+                    target.relative_to(root)
+                except ValueError as exc:
+                    raise ValueError("path escapes OMEGA_ROOT") from exc
+                if not target.is_file():
+                    raise ValueError("path is not a file")
+                doc = semantic.ingest_file(
+                    target,
+                    doc_id=body.get("doc_id"),
+                    source=body.get("source") or "file",
+                )
+            else:
+                if not text:
+                    self._json({"error": "text or path required"}, 400)
+                    return
+                doc = semantic.ingest(
+                    str(text),
+                    doc_id=body.get("doc_id"),
+                    source=body.get("source") or "api",
+                    title=body.get("title") or "",
+                    meta=body.get("meta") if isinstance(body.get("meta"), dict) else {},
+                )
+        except ValueError as exc:
+            self._json({"error": str(exc)}, 400)
+            return
+        except Exception as exc:  # noqa: BLE001
+            self._json({"error": str(exc)}, 400)
+            return
+        self._json({"ok": True, "doc": doc})
+
+    def _api_semantic_search(self, query):
+        q = (query or {}).get("q") or (query or {}).get("query") or ""
+        if not q:
+            self._json({"error": "q required"}, 400)
+            return
+        try:
+            limit = int((query or {}).get("limit") or 5)
+            doc_id = (query or {}).get("doc_id") or None
+            hits = semantic.search(q, limit=limit, doc_id=doc_id)
+        except ValueError as exc:
+            self._json({"error": str(exc)}, 400)
+            return
+        self._json({"query": q, "backend": "lexical", "hits": hits})
+
     def _api_plan(self, body):
         task = (body.get("task") or "").strip()
         if not task:
@@ -300,9 +355,14 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             return self._api_status(query)
         if parsed.path == "/api/memory/sessions":
             memory.ensure_layout()
+            semantic.ensure_layout()
             return self._json({"sessions": memory.list_sessions()})
         if parsed.path.startswith("/api/memory/working"):
             return self._api_memory_working_get(query)
+        if parsed.path == "/api/memory/semantic/docs":
+            return self._json({"docs": semantic.list_docs(), "backend": "lexical"})
+        if parsed.path.startswith("/api/memory/semantic/search"):
+            return self._api_semantic_search(query)
         if parsed.path.startswith("/api/tree"):
             return self._api_tree(query)
         if parsed.path.startswith("/api/file"):
@@ -338,6 +398,8 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
             return self._api_chat(body)
         if parsed.path == "/api/memory/working":
             return self._api_memory_working_post(body)
+        if parsed.path == "/api/memory/semantic/ingest":
+            return self._api_semantic_ingest(body)
         if parsed.path == "/api/plan":
             return self._api_plan(body)
         if parsed.path == "/api/agents/run":
@@ -398,6 +460,15 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path.startswith("/api/memory/working"):
             return self._api_memory_working_delete(self._get_query(self.path))
+        if parsed.path.startswith("/api/memory/semantic/docs/"):
+            segs = [unquote(s) for s in parsed.path.split("/") if s]
+            # memory semantic docs <id>
+            doc_id = segs[-1] if segs else ""
+            try:
+                ok = semantic.delete_doc(doc_id)
+            except ValueError as exc:
+                return self._json({"error": str(exc)}, 400)
+            return self._json({"deleted": ok, "doc_id": doc_id})
         segs = [unquote(s) for s in parsed.path.split("/")]
         if parsed.path.startswith("/api/agents/") and len(segs) >= 4:
             removed = agents.remove_agent(segs[3])
@@ -424,6 +495,7 @@ def serve(port=None, host=None):
         return 2
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     memory.ensure_layout()
+    semantic.ensure_layout()
     try:
         config.GATEWAY_PID.write_text(str(os.getpid()))
     except OSError:
