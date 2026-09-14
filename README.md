@@ -140,7 +140,7 @@ See:
 
 ## Version and changelog
 
-Current package line: **0.4.0**. Release history and migration notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) and `docs/wiki/releases/`.
+Current package line: **0.4.1**. Release history and migration notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) and `docs/wiki/releases/`.
 
 ## Security boundary
 
