@@ -3,6 +3,7 @@
 Stdlib only: chunking + TF-cosine lexical retrieval.
 Not vector embeddings — `backend: lexical` is explicit.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -171,13 +172,18 @@ def _load_chunks() -> list[dict]:
     return rows
 
 
-def _cosine(a: Counter, b: Counter) -> float:
+def _cosine(a: Counter, b: Counter, na_val: float | None = None) -> float:
     if not a or not b:
         return 0.0
-    keys = set(a) | set(b)
-    dot = sum(a.get(k, 0) * b.get(k, 0) for k in keys)
-    na = math.sqrt(sum(v * v for v in a.values()))
+
+    # ⚡ Bolt: Optimize dot product by only iterating over intersection
+    dot = sum(a[k] * b[k] for k in a if k in b)
+    if dot == 0:
+        return 0.0
+
+    na = na_val if na_val is not None else math.sqrt(sum(v * v for v in a.values()))
     nb = math.sqrt(sum(v * v for v in b.values()))
+
     if na == 0 or nb == 0:
         return 0.0
     return dot / (na * nb)
@@ -190,11 +196,15 @@ def search(query: str, *, limit: int = 5, doc_id: str | None = None) -> list[dic
     if not q:
         return []
     hits = []
+
+    # ⚡ Bolt: Pre-compute query magnitude outside the loop
+    q_mag = math.sqrt(sum(v * v for v in q.values()))
+
     for ch in _load_chunks():
         if doc_id and ch.get("doc_id") != doc_id:
             continue
         tf = Counter(ch.get("tf") or ch.get("tokens") or [])
-        score = _cosine(q, tf)
+        score = _cosine(q, tf, na_val=q_mag)
         if score <= 0:
             continue
         hits.append(
