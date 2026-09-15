@@ -161,7 +161,10 @@ async function loadTree(path='.', depth=0){
   for(const e of data.entries){
     const n=document.createElement('div'); n.className='node';
     n.style.paddingLeft=(8+depth*14)+'px';
-    n.innerHTML = e.type==='dir' ? `<span class="d">▸</span>${e.name}` : `<span class="d">·</span>${e.name}`;
+    const icon = document.createElement('span'); icon.className = 'd';
+    icon.textContent = e.type === 'dir' ? '▸' : '·';
+    n.appendChild(icon);
+    n.appendChild(document.createTextNode(e.name));
     n.onclick=()=> e.type==='dir' ? loadTree(path+'/'+e.name, depth+1) : openFile(path+'/'+e.name);
     tree.appendChild(n);
   }
@@ -258,7 +261,12 @@ async function loadSkills(term=''){
   $('#skills-list').innerHTML='';
   for(const s of list){
     const d=document.createElement('div'); d.className='sk';
-    d.innerHTML=`<b>${s.name}</b><span>${s.description}</span>`;
+    const b = document.createElement('b');
+    b.textContent = s.name;
+    const span = document.createElement('span');
+    span.textContent = s.description;
+    d.appendChild(b);
+    d.appendChild(span);
     d.onclick=()=>{ ai(`skill ⟦${s.name}⟧\n${s.description}`); $('#skills-drawer').classList.remove('open'); };
     $('#skills-list').appendChild(d);
   }
